@@ -1,0 +1,44 @@
+{
+    "clangd.arguments": [
+        "--compile-commands-dir=$${workspaceFolder}",
+        "--background-index",
+        "--completion-style=detailed",
+        "--header-insertion=never",
+        "-log=info",
+        "--clang-tidy-checks=performance-*, bugprone-*, misc-*, google-*, modernize-*, readability-*, portability-*",
+        "--clang-tidy",
+        "--completion-parse=auto",
+        "--function-arg-placeholders=true",
+        "--include-cleaner-stdlib",
+        "--pch-storage=memory",
+        "--ranking-model=decision_forest",
+        "--query-driver=$(PREFIX)*"
+    ],
+    "clangd.onConfigChanged": "restart",
+    "clangd.serverCompletionRanking": true,
+    "clangd.detectExtensionConflicts": true,
+    "editor.suggest.snippetsPreventQuickSuggestions": true,
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.expand": false,
+    "explorer.fileNesting.patterns": {
+        "*.elf": "${capture}*.bin, ${capture}*.map, ${capture}*.dis, ${capture}*.sym",
+        ".clangd": ".clang*",
+        "*.c": "$(capture).o,$(capture).d",
+        "Makefile": "tmp.make,compile_commands.json",
+        "*.in": "$(capture)",
+        "*.s": "$(capture).o,$(capture).d",
+        "*.S": "$(capture).o,$(capture).d",
+        "*.idl": "$(capture).h,$(capture).c"
+    },
+    "outline.collapseItems": "alwaysCollapse",
+    "outline.problems.badges": true,
+    "editor.foldingImportsByDefault": true,
+    "C_Cpp.default.intelliSenseMode": "gcc-arm",
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/compile_commands.json",
+    "C_Cpp.clang_format_style": "file:${workspaceFolder}/config/.clang-format",
+    "C_Cpp.formatting": "clangFormat",
+    "C_Cpp.clang_format_fallbackStyle": "GNU",
+    "todo-tree.general.tags": [
+        "M7PROJ-H7"
+    ]
+}

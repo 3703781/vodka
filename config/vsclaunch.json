@@ -1,0 +1,72 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "JLINK",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/m7proj-h7.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "jlink",
+            "serverpath": "/home/miaow/software/jlink_v794e/JLinkGDBServer",
+            "runToEntryPoint": "main",
+            "device": "STM32H743XI",
+            "interface": "swd",
+            "svdFile": "${workspaceFolder}/config/stm32h743.svd",
+            "armToolchainPath": "/opt/st/stm32cubeclt/GNU-tools-for-STM32/bin",
+            "swoConfig": {
+                "cpuFrequency": 480000000,
+                "swoFrequency": 10000000,
+                "decoders": [
+                    {
+                        "port": 0,
+                        "type": "console",
+                        "label": "swo-stdout",
+                        "encoding": "ascii"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "STLINK",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/m7proj-h7.elf",
+            "request": "launch",
+            "stm32cubeprogrammer": "/opt/st/stm32cubeclt/STM32CubeProgrammer/bin",
+            "type": "cortex-debug",
+            "servertype": "stlink",
+            "serverArgs": [
+                "--swo-port",
+                "50005",
+                "--cpu-clock",
+                "480000000",
+                "--swo-clock-div",
+                "480",
+            ],
+            "interface": "swd",
+            "runToEntryPoint": "main",
+            "svdFile": "${workspaceFolder}/config/stm32h743.svd",
+            "armToolchainPath": "/opt/st/stm32cubeclt/GNU-tools-for-STM32/bin",
+            "showDevDebugOutput": "raw",
+            "swoConfig": {
+                "enabled": true,
+                "source": "socket",
+                "swoPort": "50005",
+                "cpuFrequency": 480000000,
+                "swoFrequency": 1000000,
+                "decoders": [
+                    {
+                        "showOnStartup": true,
+                        "port": 0,
+                        "type": "console",
+                        "label": "stdout",
+                        "encoding": "ascii"
+                    }
+                ]
+            }
+        }
+    ]
+}
