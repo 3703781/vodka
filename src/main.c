@@ -8,7 +8,7 @@
  */
 int main(void)
 {
-#define POINTERS 1048576
+#define POINTERS 262144
 	uint8_t **list = (uint8_t **)malloc(POINTERS * 4);
 	uint32_t j = 0;
 	while (1) {
@@ -17,6 +17,8 @@ int main(void)
 			list[i] = (uint8_t *)malloc(s);
 		}
 		bsp_led_toggle(BSP_LED_BLUE);
+		bsp_led_toggle(BSP_LED_YELLOW);
+		bsp_led_toggle(BSP_LED_RED);
 		HAL_Delay(100);
 		printf("%lu\r\n", j++);
 		for (size_t i = 0; i < POINTERS; i++) {

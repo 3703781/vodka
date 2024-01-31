@@ -5,13 +5,16 @@
 
 enum bsp_led_inst {
     BSP_LED_BLUE = 0,
-    BSP_LED_ERROR
+    BSP_LED_RED,
+    BSP_LED_YELLOW
 };
 
 #define BSP_LED_BLUE_PIN GPIO_PIN_13
 #define BSP_LED_BLUE_PORT GPIOC
-#define BSP_LED_ERROR_PIN GPIO_PIN_7
-#define BSP_LED_ERROR_PORT GPIOH
+#define BSP_LED_RED_PIN GPIO_PIN_11
+#define BSP_LED_RED_PORT GPIOA
+#define BSP_LED_YELLOW_PIN GPIO_PIN_7
+#define BSP_LED_YELLOW_PORT GPIOH
 
 void bsp_led_init(void);
 void bsp_led_toggle(enum bsp_led_inst led);

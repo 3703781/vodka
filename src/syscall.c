@@ -70,7 +70,7 @@ void *_sbrk(ptrdiff_t incr)
 	char *heap_current_old = heap_current;
 
 	if (heap_current + incr > heap_high) {
-		bsp_led_toggle(BSP_LED_ERROR);
+		bsp_led_on(BSP_LED_YELLOW);
 		errno = ENOMEM;
 		return (caddr_t)-1;
 	}

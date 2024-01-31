@@ -450,7 +450,7 @@ FodyWeavers.xsd
 
 tmp.make
 *.bin
-tools/s32gimage/s32gimage
+tools/mkimage/mkimage
 tools/idlc/idlc
 tools/genconfig/genconfig
 *.bak.*
