@@ -18,6 +18,7 @@
     "clangd.serverCompletionRanking": true,
     "clangd.detectExtensionConflicts": true,
     "editor.suggest.snippetsPreventQuickSuggestions": true,
+    "editor.tabSize": 8,
     "explorer.fileNesting.enabled": true,
     "explorer.fileNesting.expand": false,
     "explorer.fileNesting.patterns": {

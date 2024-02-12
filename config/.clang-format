@@ -13,6 +13,10 @@ AccessModifierOffset: -4
 AlignAfterOpenBracket: Align
 AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: false
 AlignEscapedNewlines: Left
 AlignOperands: true
 AlignTrailingComments: false
@@ -68,8 +72,11 @@ FixNamespaceComments: false
 #   git grep -h '^#define [^[:space:]]*for_each[^[:space:]]*(' include/ tools/ \
 #   | sed "s,^#define \([^[:space:]]*for_each[^[:space:]]*\)(.*$,  - '\1'," \
 #   | LC_ALL=C sort -u
-ForEachMacros:
-  - 'for_each'
+ForEachMacros: 
+  - 'ARRAY_FOR_EACH'
+  - 'ARRAY_FOR_EACH_PTR'
+  - 'SYS_SLIST_FOR_EACH_CONTAINER'
+  - 'BSP_MODULE_FOR_EACH'
 
 IncludeBlocks: Preserve
 IncludeCategories:
@@ -84,6 +91,8 @@ IndentWrappedFunctionNames: false
 JavaScriptQuotes: Leave
 JavaScriptWrapImports: true
 KeepEmptyLinesAtTheStartOfBlocks: false
+Language: Cpp
+LineEnding: LF
 MacroBlockBegin: ''
 MacroBlockEnd: ''
 MaxEmptyLinesToKeep: 1
@@ -123,4 +132,5 @@ SpacesInSquareBrackets: false
 Standard: Cpp03
 TabWidth: 8
 UseTab: Always
+
 ...

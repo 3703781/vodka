@@ -72,10 +72,11 @@ distclean: clean cleanbear cleanhosttools
 	@echo "CLEAN       $(this_dir).vscode"; \
 	rm -rf $(this_dir).vscode
 
+ifeq ($(DEBUGGER),STLINK)
 install:
 	@set -e; \
 	$(MAKE) -j`nproc`; \
-	echo "PROG        $(abs_target).elf"; \
+	echo "PROG[STLNK] $(abs_target).elf"; \
 	if [ "$(TGTIMG)" = "intflash" ]; then \
 	  $(CUBEPROGDIR)STM32_Programmer_CLI -c port=SWD freq=4000 -w $(abs_target).elf -g > /dev/null; \
 	elif [ "$(TGTIMG)" = "sdcard" ]; then \
@@ -83,3 +84,17 @@ install:
 	elif [ "$(TGTIMG)" = "qspiflash" ]; then \
 	  echo not impelemented; \
 	fi
+else ifeq ($(DEBUGGER),JLINK)
+install:
+	@set -e; \
+	$(MAKE) -j`nproc`; \
+	echo "PROG[JLNK]  $(abs_target).elf"; \
+	if [ "$(TGTIMG)" = "intflash" ]; then \
+	  $(JLINKDIR)JFlashExe -hide -openprj$(this_dir)config/stm32h743xi.jflash -open$(abs_target).elf -auto -exit; \
+	elif [ "$(TGTIMG)" = "sdcard" ]; then \
+	  echo not impelemented; \
+	elif [ "$(TGTIMG)" = "qspiflash" ]; then \
+	  echo not impelemented; \
+	fi
+
+endif

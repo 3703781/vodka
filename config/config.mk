@@ -1,7 +1,12 @@
 ABSPROJDIR := /home/miaow/m7proj-h7/
 
 PREFIX := /home/miaow/software/arm-none-eabi-13.2.rel1/bin/arm-none-eabi-
+
+DEBUGGER := JLINK
+# DEBUGGER := STLINK
+
 CUBEPROGDIR := /opt/st/stm32cubeclt/STM32CubeProgrammer/bin/
+JLINKDIR := /home/miaow/software/jlink_v794i/
 
 TGTIMG := intflash
 # TGTIMG := sdcard

@@ -1,16 +1,16 @@
 #include "bsp_sdram.h"
 
-#define SDRAM_MODEREG_BURST_LENGTH_1 ((uint16_t)0)
-#define SDRAM_MODEREG_BURST_LENGTH_2 ((uint16_t)1)
-#define SDRAM_MODEREG_BURST_LENGTH_4 ((uint16_t)2)
-#define SDRAM_MODEREG_BURST_LENGTH_8 ((uint16_t)4)
-#define SDRAM_MODEREG_BURST_TYPE_SEQUENTIAL ((uint16_t)0)
-#define SDRAM_MODEREG_BURST_TYPE_INTERLEAVED ((uint16_t)8)
-#define SDRAM_MODEREG_CAS_LATENCY_2 ((uint16_t)0x20)
-#define SDRAM_MODEREG_CAS_LATENCY_3 ((uint16_t)0x30)
-#define SDRAM_MODEREG_OPERATING_MODE_STANDARD ((uint16_t)0)
+#define SDRAM_MODEREG_BURST_LENGTH_1		 ((uint16_t)0)
+#define SDRAM_MODEREG_BURST_LENGTH_2		 ((uint16_t)1)
+#define SDRAM_MODEREG_BURST_LENGTH_4		 ((uint16_t)2)
+#define SDRAM_MODEREG_BURST_LENGTH_8		 ((uint16_t)4)
+#define SDRAM_MODEREG_BURST_TYPE_SEQUENTIAL	 ((uint16_t)0)
+#define SDRAM_MODEREG_BURST_TYPE_INTERLEAVED	 ((uint16_t)8)
+#define SDRAM_MODEREG_CAS_LATENCY_2		 ((uint16_t)0x20)
+#define SDRAM_MODEREG_CAS_LATENCY_3		 ((uint16_t)0x30)
+#define SDRAM_MODEREG_OPERATING_MODE_STANDARD	 ((uint16_t)0)
 #define SDRAM_MODEREG_WRITEBURST_MODE_PROGRAMMED ((uint16_t)0)
-#define SDRAM_MODEREG_WRITEBURST_MODE_SINGLE ((uint16_t)0x200)
+#define SDRAM_MODEREG_WRITEBURST_MODE_SINGLE	 ((uint16_t)0x200)
 
 static SDRAM_HandleTypeDef hsdram1;
 
@@ -82,19 +82,11 @@ static uint32_t fmc_initialized = 0;
 void HAL_SDRAM_MspInit(SDRAM_HandleTypeDef *sdramHandle)
 {
 	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
-	if (fmc_initialized) {
+	if (fmc_initialized)
 		return;
-	}
+
 	fmc_initialized = 1;
-	RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = { 0 };
-
 	UNUSED(sdramHandle);
-
-	/** Initializes the peripherals clock */
-	PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_FMC;
-	PeriphClkInitStruct.FmcClockSelection = RCC_FMCCLKSOURCE_D1HCLK;
-	assert(HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) == HAL_OK);
-	/* Peripheral clock enable */
 	__HAL_RCC_FMC_CLK_ENABLE();
 
 	/** FMC GPIO Configuration

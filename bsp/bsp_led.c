@@ -21,9 +21,9 @@ void bsp_led_init(void)
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 
-	for (size_t i = 0; i < ARRAY_SIZE(led_info_list); i++) {
-		port = led_info_list[i].port;
-		pin = led_info_list[i].pin;
+	ARRAY_FOR_EACH_PTR(led_info_list, ptr) {
+		port = ptr->port;
+		pin = ptr->pin;
 		HAL_GPIO_WritePin(port, pin, GPIO_PIN_SET);
 		GPIO_InitStruct.Pin = pin;
 		HAL_GPIO_Init(port, &GPIO_InitStruct);

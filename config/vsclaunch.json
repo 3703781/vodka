@@ -7,24 +7,27 @@
         {
             "name": "JLINK",
             "cwd": "${workspaceFolder}",
+            "preLaunchTask": "make",
             "executable": "${workspaceFolder}/m7proj-h7.elf",
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "jlink",
-            "serverpath": "/home/miaow/software/jlink_v794e/JLinkGDBServer",
+            "serverpath": "/home/miaow/software/jlink_v794i/JLinkGDBServer",
             "runToEntryPoint": "main",
             "device": "STM32H743XI",
             "interface": "swd",
             "svdFile": "${workspaceFolder}/config/stm32h743.svd",
             "armToolchainPath": "/opt/st/stm32cubeclt/GNU-tools-for-STM32/bin",
             "swoConfig": {
+                "source": "probe",
+                "enabled": true,
                 "cpuFrequency": 480000000,
                 "swoFrequency": 10000000,
                 "decoders": [
                     {
-                        "port": 0,
+                        "port": 1,
                         "type": "console",
-                        "label": "swo-stdout",
+                        "label": "stdout",
                         "encoding": "ascii"
                     }
                 ]
@@ -33,6 +36,7 @@
         {
             "name": "STLINK",
             "cwd": "${workspaceFolder}",
+            "preLaunchTask": "make",
             "executable": "${workspaceFolder}/m7proj-h7.elf",
             "request": "launch",
             "stm32cubeprogrammer": "/opt/st/stm32cubeclt/STM32CubeProgrammer/bin",

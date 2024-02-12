@@ -21,6 +21,8 @@ stm32h7xx_hal_exti.o \
 stm32h7xx_hal_tim.o \
 stm32h7xx_hal_tim_ex.o \
 stm32h7xx_hal_sdram.o \
+stm32h7xx_hal_ltdc.o \
+stm32h7xx_hal_ltdc_ex.o \
 stm32h7xx_ll_fmc.o
 
 

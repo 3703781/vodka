@@ -19,19 +19,6 @@ int _write(int fd, char *ptr, int len)
 	if (len == 0)
 		return 0;
 
-	// if (fd < LWIP_SOCKET_OFFSET) {
-	// 	int uart_instance = fd_to_uart_instance[fd];
-
-	// 	Linflexd_Uart_Ip_AsyncSend(uart_instance, (uint8 *)ptr, len);
-	// 	while (Linflexd_Uart_Ip_GetTransmitStatus(uart_instance,
-	// 						  NULL) ==
-	// 	       LINFLEXD_UART_IP_STATUS_BUSY)
-	// 		taskYIELD();
-
-	// 	return len;
-	// } else {
-	// 	return (int)lwip_write(fd, (const void *)ptr, (size_t)len);
-	// }
 	for (size_t i = 0; i < len; i++) {
 		ITM_SendChar(ptr[i], fd_to_itm_instance[fd]);
 	}
