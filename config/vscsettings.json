@@ -38,7 +38,7 @@
     "C_Cpp.default.compileCommands": "${workspaceFolder}/compile_commands.json",
     "C_Cpp.clang_format_style": "file:${workspaceFolder}/config/.clang-format",
     "C_Cpp.formatting": "clangFormat",
-    "C_Cpp.clang_format_fallbackStyle": "GNU",
+    "C_Cpp.clang_format_fallbackStyle": "none",
     "todo-tree.general.tags": [
         "M7PROJ-H7"
     ]

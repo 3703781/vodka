@@ -22,6 +22,11 @@ static void bklt_on_default(struct bsp_lcd_des *des)
 	HAL_GPIO_WritePin(des->bklt_port, des->bklt_pin, GPIO_PIN_SET);
 }
 
+static void bklt_set_brightness(struct bsp_lcd_des *des)
+{
+	
+}
+
 void HAL_LTDC_MspInit(LTDC_HandleTypeDef *hltdc)
 {
 	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
@@ -125,6 +130,8 @@ static inline int set_default_des(struct bsp_lcd_des *des)
 	SET_VAL_IF_ZERO(des->layer_num, 1);
 	SET_VAL_IF_ZERO(des->bklt_pin, GPIO_PIN_6);
 	SET_VAL_IF_NULL(des->bklt_port, GPIOH);
+	SET_VAL_IF_NULL(des->bklt_timer, TIM12);
+	SET_VAL_IF_ZERO(des->bklt_timer_ch, 1);
 	return 0;
 }
 
@@ -208,6 +215,16 @@ static inline int init_layer(LTDC_LayerCfgTypeDef *cfg)
 		if (HAL_LTDC_ConfigLayer(&des->_hltdc, &(cfg[i]), i) != HAL_OK)
 			return -ENODEV;
 	}
+	return 0;
+}
+
+static inline int init_bklt(struct bsp_lcd_des * des)
+{
+	// TIM_HandleTypeDef tim_handle;
+	// __HAL_RCC_TIM12_CLK_ENABLE();
+	// tim_handle.Channel = HAL_TIM_ACTIVE_CHANNEL_1;
+	// tim_handle.Init.AutoReloadPreload = ();
+	// HAL_TIM_PWM_Init()
 	return 0;
 }
 
