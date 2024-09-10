@@ -8,19 +8,14 @@
  */
 int main(void)
 {
-#define POINTERS 262144
-	uint8_t **list = (uint8_t **)malloc(POINTERS * 4);
+	int i = 0;
 	while (1) {
-		for (size_t i = 0; i < POINTERS; i++) {
-			size_t s = abs(rand()) % 32 + 1;
-			list[i] = (uint8_t *)malloc(s);
-		}
-		bsp_led_toggle(BSP_LED_BLUE);
-		HAL_Delay(100);
-		for (size_t i = 0; i < POINTERS; i++) {
-			free(list[i]);
-		}
+		i++;
+		printf("%d\n", i);
+		HAL_Delay(1000);
 	}
+
+	return 0;
 }
 
 #ifdef USE_FULL_ASSERT

@@ -17,10 +17,8 @@ struct bsp_lcd_dev {
 };
 
 struct bsp_lcd_backlight_ops {
-	void (*turn_on)(struct bsp_lcd_des *des);
-	void (*set_brightness)(struct bsp_lcd_des *des, uint8_t brightness);
-	uint8_t (*get_brightness)(struct bsp_lcd_des *des);
-	void (*turn_off)(struct bsp_lcd_des *des);
+	int (*set_brightness)(uint8_t brightness);
+	int (*get_brightness)(void);
 };
 
 /**
@@ -36,9 +34,10 @@ struct bsp_lcd_des {
 	uint16_t bklt_pin;
 	GPIO_TypeDef *bklt_port;
 	TIM_TypeDef *bklt_timer;
-	uint16_t bklt_timer_ch;
+	uint32_t bklt_timer_ch;
 	uint32_t layer_num;
 	void *layer_gram_addr[2];
+	TIM_HandleTypeDef _htim_bklt;
 	LTDC_HandleTypeDef _hltdc;
 	DMA2D_HandleTypeDef _hdma2d;
 	LTDC_LayerCfgTypeDef _lyr_cfg[2];

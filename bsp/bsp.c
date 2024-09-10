@@ -53,14 +53,14 @@ static void bsp_earlyinit_clk(void)
 	assert(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) == HAL_OK);
 
 	/* 
-	ltdc - 33.3Mhz, 60fps 
+	ltdc - 17.6Mhz, 29.98fps, 52.8MB/s
 	sdram - 120MHz
 	*/
-	PeriphClkInitStruct.PLL3.PLL3M = 25;
-	PeriphClkInitStruct.PLL3.PLL3N = 330;
+	PeriphClkInitStruct.PLL3.PLL3M = 5;
+	PeriphClkInitStruct.PLL3.PLL3N = 88;
 	PeriphClkInitStruct.PLL3.PLL3P = 2;
 	PeriphClkInitStruct.PLL3.PLL3Q = 2;
-	PeriphClkInitStruct.PLL3.PLL3R = 10;
+	PeriphClkInitStruct.PLL3.PLL3R = 25;
 	PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_0;
 	PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOMEDIUM;
 	PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
@@ -125,21 +125,6 @@ static void bsp_earlyinit_crt0(void)
 	SCB_InvalidateDCache();
 }
 
-static void bsp_earlyinit_debug(void)
-{
-	GPIO_InitTypeDef gpio_init;
-	gpio_init.Pin = GPIO_PIN_3;
-	gpio_init.Mode = GPIO_MODE_AF_PP;
-	gpio_init.Pull = GPIO_NOPULL;
-	gpio_init.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-	gpio_init.Alternate = GPIO_AF0_TRACE;
-	HAL_GPIO_Init(GPIOB, &gpio_init);
-
-	// CoreDebug->DEMCR |= CoreDebug_DHCSR_S_RETIRE_ST_Msk;
-	// ITM->TCR |= ITM_TCR_ITMENA_Msk;
-	// ITM->TER |= 1UL;
-}
-
 static void bsp_earlyinit_misc(void)
 {
 	/* PA14 (JTCK/SWCLK)   ------> DEBUG_JTCK-SWCLK
@@ -163,7 +148,6 @@ static void bsp_earlyinit_misc(void)
 	HAL_EnableCompensationCell();
 }
 
-struct bsp_lcd_des *bsp_lcd_des;
 void bsp_init(void)
 {
 	bsp_earlyinit_mpu();
@@ -171,14 +155,16 @@ void bsp_init(void)
 	HAL_Init();
 	bsp_earlyinit_clk();
 	bsp_earlyinit_misc();
-	bsp_earlyinit_debug();
+	bsp_debug_init();
 
 	bsp_module_init();
 	bsp_sdram_init();
 	bsp_earlyinit_crt0();
+
+	printf("%llu\n", bsp_debug_tsg_get());
+	bsp_module_append(&bsp_tty_mod);
 	bsp_module_append(&bsp_lcd_mod);
-	bsp_module_prapare_all();
+	printf("%llu\n", bsp_debug_tsg_get());
+	bsp_module_prepare_all();
 	bsp_module_setup_all();
-	if (IS_ERR_OR_NULL(bsp_lcd_des))
-		printf("bsp_init_err");
 }

@@ -23,7 +23,11 @@ stm32h7xx_hal_tim_ex.o \
 stm32h7xx_hal_sdram.o \
 stm32h7xx_hal_ltdc.o \
 stm32h7xx_hal_ltdc_ex.o \
-stm32h7xx_ll_fmc.o
+stm32h7xx_ll_fmc.o \
+stm32h7xx_hal_uart.o \
+stm32h7xx_hal_uart_ex.o \
+stm32h7xx_hal_usart.o \
+stm32h7xx_hal_usart_ex.o
 
 
 confs :=

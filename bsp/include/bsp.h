@@ -6,7 +6,9 @@
 #include <bsp_module.h>
 #include <bsp_led.h>
 #include <bsp_sdram.h>
+#include <bsp_debug.h>
 #include <bsp_lcd.h>
+#include <bsp_tty.h>
 
 void bsp_init(void);
 

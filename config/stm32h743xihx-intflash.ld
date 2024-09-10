@@ -1,8 +1,10 @@
 ENTRY(Reset_Handler)
 HEAP_SIZE = 0x1000000; /* 8MB */
-/* HEAP_SIZE = 0x00080000; */ /* 512K */
+GRAM_SIZE = 0x600000; /* 6MB */
+TTY_SIZE = 0x1000;  /* 4KB must be powers of 2*/
 _estack = ORIGIN(int_dtcm) + LENGTH(int_dtcm);
-
+_sext_sdram = ORIGIN(ext_sdram);
+_eext_sdram = _sext_sdram + LENGTH(ext_sdram);
 MEMORY
 {
     int_itcm (rwx)          : ORIGIN = 0x00000000, LENGTH = 64K
@@ -78,6 +80,9 @@ SECTIONS
         . = ALIGN(4);
         *libcmsis.a:(.data .data* .tdata .tdata*)
         *libhal.a:stm32h7xx_hal.o(.data .data* .tdata .tdata*)
+        *libbsp.a:bsp.o(.data .data* .tdata .tdata*)
+        *libbsp.a:bsp_utils.o(.data .data* .tdata .tdata*)
+        *libbsp.a:bsp_debug.o(.data .data* .tdata .tdata*)
         *libbsp.a:bsp_sdram.o(.data .data* .tdata .tdata*)
         *libbsp.a:bsp_module.o(.data .data* .tdata .tdata*)
         *libc.a:(.data .data* .tdata .tdata*)
@@ -85,7 +90,7 @@ SECTIONS
         *libgcc.a:(.data .data* .tdata .tdata*)
         *syscall.o(.data .data* .tdata .tdata*)
 
-        PROVIDE_HIDDEN( _edata_int_dtcm = .);
+        PROVIDE_HIDDEN ( _edata_int_dtcm = .);
     } > int_dtcm AT > int_flash
 
     _sidata_ext_sdram = LOADADDR(.data.ext_sdram);
@@ -112,6 +117,9 @@ SECTIONS
 
         *libcmsis.a:(.bss .bss* COMMON .tbss)
         *libhal.a:stm32h7xx_hal.o(.bss .bss* COMMON .tbss)
+        *libbsp.a:bsp.o(.bss .bss* COMMON .tbss)
+        *libbsp.a:bsp_utils.o(.bss .bss* COMMON .tbss)
+        *libbsp.a:bsp_debug.o(.bss .bss* COMMON .tbss)
         *libbsp.a:bsp_sdram.o(.bss .bss* COMMON .tbss)
         *libbsp.a:bsp_module.o(.bss .bss* COMMON .tbss)
         *libc.a:(.bss .bss* COMMON .tbss)
@@ -119,6 +127,15 @@ SECTIONS
         *syscall.o(.bss .bss* COMMON .tbss)
 
         PROVIDE_HIDDEN (_ebss_int_dtcm = .);
+    } > int_dtcm
+
+    .tty.int_dtcm :
+    {
+        /* used for uart dma cache */
+        . = ALIGN(16);
+        PROVIDE_HIDDEN (_stty_int_dtcm = .);
+        . += TTY_SIZE;
+        PROVIDE_HIDDEN (_etty_int_dtcm = .);
     } > int_dtcm
 
     .bss.ext_sdram :
@@ -144,6 +161,18 @@ SECTIONS
         PROVIDE_HIDDEN (_sheap_ext_sdram = .);
         . += HEAP_SIZE;
         PROVIDE_HIDDEN (_eheap_ext_sdram = .);
+    } > ext_sdram
+
+    .gram.ext_sdram :
+    {
+        . = ALIGN(128);
+        PROVIDE_HIDDEN (_sgram0_ext_sdram = .);
+        . += GRAM_SIZE / 2;
+        PROVIDE_HIDDEN (_egram0_ext_sdram = .);
+        . = ALIGN(128);
+        PROVIDE_HIDDEN (_sgram1_ext_sdram = .);
+        . += GRAM_SIZE / 2;
+        PROVIDE_HIDDEN (_egram1_ext_sdram = .);
     } > ext_sdram
 
     /DISCARD/ :

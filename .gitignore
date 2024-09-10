@@ -457,3 +457,4 @@ tools/genconfig/genconfig
 *.bak
 *.dis
 *.sym
+ref/

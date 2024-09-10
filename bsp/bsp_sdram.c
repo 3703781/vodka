@@ -14,6 +14,32 @@
 
 static SDRAM_HandleTypeDef hsdram1;
 
+static inline void print(const char *const str)
+{
+	for (size_t i = 0; str[i] != '\0'; i++) {
+		ITM_SendChar(str[i], 1);
+	}
+}
+
+static void bsp_sdram_test(void)
+{
+	extern char _sext_sdram, _eext_sdram;
+	volatile uint32_t *start = (uint32_t *)&_sext_sdram;
+	volatile uint32_t *end = (uint32_t *)&_eext_sdram;
+	volatile uint32_t *i;
+	for (i = start; i < end; i++) {
+		*i = (uint32_t)((uint32_t)i * (uint32_t)i);
+	}
+
+	SCB_CleanInvalidateDCache();
+	for (i = start; i < end; i++) {
+		if (*i != (uint32_t)((uint32_t)i * (uint32_t)i)) {
+			print("[bsp_sdram]: test failed\n");
+			break;
+		}
+	}
+}
+
 /* FMC initialization function */
 void bsp_sdram_init(void)
 {
@@ -75,6 +101,8 @@ void bsp_sdram_init(void)
 	assert(HAL_SDRAM_SendCommand(&hsdram1, &cmd, 0x1000) == HAL_OK);
 
 	HAL_SDRAM_ProgramRefreshRate(&hsdram1, 918);
+
+	bsp_sdram_test();
 }
 
 static uint32_t fmc_initialized = 0;

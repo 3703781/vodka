@@ -18,8 +18,8 @@ struct bsp_module {
 	const char *version;
 	void *descriptor;
 
-	void *(*setup)(void *);
-	void *(*desetup)(void *);
+	int (*setup)(void *);
+	int (*desetup)(void *);
 	void *(*prepare)(void *);
 };
 
@@ -84,30 +84,37 @@ static inline struct bsp_module *bsp_module_find(char *name)
 	return NULL;
 }
 
-static inline void bsp_module_prapare(struct bsp_module *module, void *params)
-{
-	module->descriptor = CALL_IF_NOT_NULL_RET_PTR(module->prepare, params);
-	module->state = BSP_MODULE_STATE_COMING;
-}
+// static inline void bsp_module_prapare(struct bsp_module *module, void *params)
+// {
+// 	module->descriptor = CALL_IF_NOT_NULL_RET_PTR(module->prepare, params);
+// 	module->state = BSP_MODULE_STATE_COMING;
+// }
 
-static inline void bsp_module_setup(struct bsp_module *module, void *params)
-{
-	module->descriptor = CALL_IF_NOT_NULL_RET_PTR(module->setup, params);
-	module->state = BSP_MODULE_STATE_LIVE;
-}
+// static inline void bsp_module_setup(struct bsp_module *module, void *params)
+// {
+// 	module->descriptor = CALL_IF_NOT_NULL_RET_PTR(module->setup, params);
+// 	module->state = BSP_MODULE_STATE_LIVE;
+// }
 
-static inline void bsp_module_desetup(struct bsp_module *module, void *params)
-{
-	module->descriptor = CALL_IF_NOT_NULL_RET_PTR(module->desetup, params);
-	module->state = BSP_MODULE_STATE_GOING;
-}
+// static inline void bsp_module_desetup(struct bsp_module *module, void *params)
+// {
+// 	module->descriptor = CALL_IF_NOT_NULL_RET_PTR(module->desetup, params);
+// 	module->state = BSP_MODULE_STATE_GOING;
+// }
 
-static inline void bsp_module_prapare_all(void)
+static inline void bsp_module_prepare_all(void)
 {
 	struct bsp_module *mod;
 	BSP_MODULE_FOR_EACH(mod) {
-		mod->descriptor = CALL_IF_NOT_NULL_RET_PTR(mod->prepare, mod->descriptor);
-		mod->state = BSP_MODULE_STATE_COMING;
+		void *tmp_des = CALL_IF_NOT_NULL_RET_PTR(mod->prepare, mod->descriptor);
+		if (IS_ERR_OR_NULL(tmp_des)) {
+			printf("[bsp_module_prepare][%s]: %s (%s) failed to get descriptor\n",
+			       strerror(-PTR_ERR(tmp_des)), mod->name, mod->version);
+			mod->state = BSP_MODULE_STATE_GOING;
+		} else {
+			mod->descriptor = tmp_des;
+			mod->state = BSP_MODULE_STATE_COMING;
+		}
 	}
 }
 
@@ -115,8 +122,16 @@ static inline void bsp_module_setup_all(void)
 {
 	struct bsp_module *mod;
 	BSP_MODULE_FOR_EACH(mod) {
-		mod->descriptor = CALL_IF_NOT_NULL_RET_PTR(mod->setup, mod->descriptor);
-		mod->state = BSP_MODULE_STATE_LIVE;
+		if (mod->state != BSP_MODULE_STATE_COMING)
+			continue;
+		int res = CALL_IF_NOT_NULL_RET_INT(mod->setup, mod->descriptor);
+		if (res) {
+			printf("[bsp_module_setup][%s]: %s (%s) failed to get descriptor\n", strerror(-res), mod->name,
+			       mod->version);
+			mod->state = BSP_MODULE_STATE_GOING;
+		} else {
+			mod->state = BSP_MODULE_STATE_LIVE;
+		}
 	}
 }
 
@@ -124,7 +139,13 @@ static inline void bsp_module_desetup_all(void)
 {
 	struct bsp_module *mod;
 	BSP_MODULE_FOR_EACH(mod) {
-		mod->descriptor = CALL_IF_NOT_NULL_RET_PTR(mod->desetup, mod->descriptor);
+		if (mod->state == BSP_MODULE_STATE_GOING)
+			continue;
+		int res = CALL_IF_NOT_NULL_RET_INT(mod->desetup, mod->descriptor);
+		if (res) {
+			printf("[bsp_module_desetup][%s]: %s (%s) failed to get descriptor\n", strerror(-res),
+			       mod->name, mod->version);
+		}
 		mod->state = BSP_MODULE_STATE_GOING;
 	}
 }

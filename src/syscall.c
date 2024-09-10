@@ -5,45 +5,78 @@
 #include <string.h>
 #include <stddef.h>
 #include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/times.h>
 #include <bsp.h>
 
 static uint32_t fd_to_itm_instance[] = { 1, 1, 1 };
 
-int _write(int fd, char *ptr, int len)
+
+ssize_t _read(int fd, void *buf, size_t count)
 {
-	if (fd < 0 || ptr == NULL || len < 0) {
+	UNUSED(fd);
+	UNUSED(buf);
+	UNUSED(count);
+	return -1;
+}
+
+off_t _lseek(int fd, off_t offset, int whence)
+{
+	(void)fd;
+	(void)offset;
+	(void)whence;
+
+	return 0;
+}
+
+ssize_t _write(int fd, const void *buf, size_t count)
+{
+	if (fd < 0 || buf == NULL || count < 0) {
 		errno = EBADF;
 		return -1;
 	}
 
-	if (len == 0)
+	if (count == 0)
 		return 0;
 
-	for (size_t i = 0; i < len; i++) {
-		ITM_SendChar(ptr[i], fd_to_itm_instance[fd]);
+	for (size_t i = 0; i < count; i++) {
+		ITM_SendChar(((char *)buf)[i], fd_to_itm_instance[fd]);
 	}
-	return len;
+	return count;
 }
 
-int _read(int fd, char *buf, int count)
+int _open(const char *pathname, int flags, ...)
 {
-	// if (fd < LWIP_SOCKET_OFFSET) {
-	// 	int read = 0;
-	// 	(void)fd;
-	// 	(void)buf;
-	// 	for (; count > 0; --count) {
-	// 		read++;
-	// 	}
-
-	// 	return read;
-	// } else {
-	// 	return (int)lwip_read(fd, (void *)buf, (size_t)count);
-	// }
-	errno = EBADF;
+	UNUSED(pathname);
+	UNUSED(flags);
 	return -1;
 }
 
-void *_sbrk(ptrdiff_t incr)
+int _close(int fd)
+{
+	UNUSED(fd);
+	return -1;
+}
+
+int _kill(pid_t pid, int sig)
+{
+	UNUSED(pid);
+	UNUSED(sig);
+	return -1;
+}
+
+void _exit(int status)
+{
+	UNUSED(status);
+	while (1);
+}
+
+pid_t _getpid(void)
+{
+	return -1;
+}
+
+void *_sbrk(intptr_t incr)
 {
 	extern char _sheap_ext_sdram, _eheap_ext_sdram;
 	char *heap_low = &_sheap_ext_sdram;
@@ -59,10 +92,68 @@ void *_sbrk(ptrdiff_t incr)
 	if (heap_current + incr > heap_high) {
 		bsp_led_on(BSP_LED_YELLOW);
 		errno = ENOMEM;
-		return (caddr_t)-1;
+		return (void *)-1;
 	}
 	heap_current += incr;
 	return (caddr_t)heap_current_old;
+}
+
+int _fstat(int fd, struct stat *statbuf)
+{
+	UNUSED(fd);
+	UNUSED(statbuf);
+	return -1;
+}
+
+int _stat(const char *restrict pathname, struct stat *restrict statbuf)
+{
+	UNUSED(pathname);
+	UNUSED(statbuf);
+	return -1;
+}
+
+int _link(const char *oldpath, const char *newpath)
+{
+	UNUSED(oldpath);
+	UNUSED(newpath);
+	return -1;
+}
+
+int _unlink(const char *pathname)
+{
+	UNUSED(pathname);
+	return -1;
+}
+
+int _gettimeofday(struct timeval *restrict tv, struct timezone *_Nullable restrict tz)
+{
+	UNUSED(tv);
+	UNUSED(tz);
+	return -1;
+}
+
+clock_t _times(struct tms *buf)
+{
+	UNUSED(buf);
+	return -1;
+}
+
+int _isatty(int fd)
+{
+	return (fd <= 2) ? 1 : 0;
+}
+
+int _system(const char *command)
+{
+	UNUSED(command);
+	return -1;
+}
+
+int _rename(const char *oldpath, const char *newpath)
+{
+	UNUSED(oldpath);
+	UNUSED(newpath);
+	return -1;
 }
 
 void __malloc_lock(struct _reent *p)
@@ -88,69 +179,15 @@ void __env_unlock(void)
 	// (void)xTaskResumeAll();
 }
 
-int _close(int file)
-{
-	// if (file < LWIP_SOCKET_OFFSET) {
-	// 	if (file)
-	// 		(void)file;
-	// 	return -1;
-	// } else {
-	// 	return lwip_close(file);
-	// }
-	errno = EBADF;
-	return -1;
-}
-
-int _fstat(int file, struct stat *st)
-{
-	(void)file;
-	st->st_mode = S_IFCHR;
-	return 0;
-}
-
-int _isatty(int file)
-{
-	(void)file;
-	return 1;
-}
-
-int _lseek(int file, int ptr, int dir)
-{
-	(void)file;
-	(void)ptr;
-	(void)dir;
-
-	return 0;
-}
-
-void _exit(int status)
-{
-	(void)status;
-	while (1)
-		;
-}
-
-void _kill(int pid, int sig)
-{
-	(void)pid;
-	(void)sig;
-	return;
-}
-
-int _getpid(void)
-{
-	return -1;
-}
-
 void _init(void)
 {
 	bsp_init();
 	return;
 }
 
-int _fcntl(int s, int cmd, int val)
+int _fcntl(int fd, int cmd, ...)
 {
-	// return lwip_fcntl(s, cmd, val);
+	
 	return -1;
 }
 

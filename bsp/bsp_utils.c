@@ -1,19 +1,4 @@
 #include "bsp_utils.h"
-#include "stm32h7xx_hal.h"
-
-struct bsp_utils_bus_des {
-	const uint32_t addr_lo;
-	const uint32_t addr_hi;
-	const char *const name;
-	const uint32_t (*get_freq)(void);
-};
-
-struct bsp_utils_periph_des {
-	const uint32_t addr_lo;
-	const uint32_t addr_hi;
-	const char *const name;
-	const struct bsp_utils_bus_des *const bus_des;
-};
 
 /**
  * @brief table of descriptors of all the buses
@@ -112,25 +97,26 @@ static const struct bsp_utils_periph_des bsp_utils_periph_des[] = {
 	{ .addr_lo = 0x52002000, .addr_hi = 0x52002FFF, .name = "Flash", .bus_des = BSP_UTILS_AHB3_DES },
 	{ .addr_lo = 0x52003000, .addr_hi = 0x52003FFF, .name = "JPEG", .bus_des = BSP_UTILS_AHB3_DES },
 	{ .addr_lo = 0x52004000, .addr_hi = 0x52004FFF, .name = "FMC", .bus_des = BSP_UTILS_AHB3_DES },
-	{ .addr_lo = 0x52005000, .addr_hi = 0x52005FFF, .name = "QUADSPI", .bus_des = BSP_UTILS_AHB3_DES },
-	{ .addr_lo = 0x52006000, .addr_hi = 0x52006FFF, .name = "DLYB_QUADSPI", .bus_des = BSP_UTILS_AHB3_DES },
+	{ .addr_lo = 0x52005000, .addr_hi = 0x52005FFF, .name = "QSPI", .bus_des = BSP_UTILS_AHB3_DES },
+	{ .addr_lo = 0x52006000, .addr_hi = 0x52006FFF, .name = "DLYB_QSPI", .bus_des = BSP_UTILS_AHB3_DES },
 	{ .addr_lo = 0x52007000, .addr_hi = 0x52007FFF, .name = "SDMMC1", .bus_des = BSP_UTILS_AHB3_DES },
 	{ .addr_lo = 0x52008000, .addr_hi = 0x52008FFF, .name = "DLYB_SDMMC1", .bus_des = BSP_UTILS_AHB3_DES },
 	{ .addr_lo = 0x58000000, .addr_hi = 0x580003FF, .name = "EXTI", .bus_des = BSP_UTILS_APB4_DES },
 	{ .addr_lo = 0x58000400, .addr_hi = 0x580007FF, .name = "SYSCFG", .bus_des = BSP_UTILS_APB4_DES },
-	{ .addr_lo = 0x58000C00, .addr_hi = 0x58000FFF, .name = "LPUARTI", .bus_des = BSP_UTILS_APB4_DES },
+	{ .addr_lo = 0x58000C00, .addr_hi = 0x58000FFF, .name = "LPUART1", .bus_des = BSP_UTILS_APB4_DES },
 	{ .addr_lo = 0x58001400, .addr_hi = 0x580017FF, .name = "SPI6", .bus_des = BSP_UTILS_APB4_DES },
 	{ .addr_lo = 0x58001C00, .addr_hi = 0x58001FFF, .name = "I2C4", .bus_des = BSP_UTILS_APB4_DES },
-	{ .addr_lo = 0x58002400, .addr_hi = 0x580027FF, .name = "LPTlM2", .bus_des = BSP_UTILS_APB4_DES },
-	{ .addr_lo = 0x58002800, .addr_hi = 0x58002BFF, .name = "LPTlM3", .bus_des = BSP_UTILS_APB4_DES },
-	{ .addr_lo = 0x58002C00, .addr_hi = 0x58002FFF, .name = "LPTlM4", .bus_des = BSP_UTILS_APB4_DES },
-	{ .addr_lo = 0x58003000, .addr_hi = 0x580033FF, .name = "LPTlM5", .bus_des = BSP_UTILS_APB4_DES },
+	{ .addr_lo = 0x58002400, .addr_hi = 0x580027FF, .name = "LPTIM2", .bus_des = BSP_UTILS_APB4_DES },
+	{ .addr_lo = 0x58002800, .addr_hi = 0x58002BFF, .name = "LPTIM3", .bus_des = BSP_UTILS_APB4_DES },
+	{ .addr_lo = 0x58002C00, .addr_hi = 0x58002FFF, .name = "LPTIM4", .bus_des = BSP_UTILS_APB4_DES },
+	{ .addr_lo = 0x58003000, .addr_hi = 0x580033FF, .name = "LPTIM5", .bus_des = BSP_UTILS_APB4_DES },
 	{ .addr_lo = 0x58003800, .addr_hi = 0x58003BFF, .name = "COMP1_COMP2", .bus_des = BSP_UTILS_APB4_DES },
 	{ .addr_lo = 0x58003C00, .addr_hi = 0x58003FFF, .name = "VREF", .bus_des = BSP_UTILS_APB4_DES },
-	{ .addr_lo = 0x58004000, .addr_hi = 0x580043FF, .name = "RTC_BKP", .bus_des = BSP_UTILS_APB4_DES },
-	{ .addr_lo = 0x58004800, .addr_hi = 0x58004BFF, .name = "IWDGI", .bus_des = BSP_UTILS_APB4_DES },
+	{ .addr_lo = 0x58003C00, .addr_hi = 0x58003FFF, .name = "VREFBUF", .bus_des = BSP_UTILS_APB4_DES },
+	{ .addr_lo = 0x58004000, .addr_hi = 0x580043FF, .name = "RTC", .bus_des = BSP_UTILS_APB4_DES },
+	{ .addr_lo = 0x58004800, .addr_hi = 0x58004BFF, .name = "IWDG1", .bus_des = BSP_UTILS_APB4_DES },
 	{ .addr_lo = 0x58004C00, .addr_hi = 0x58004FFF, .name = "RESERVED", .bus_des = BSP_UTILS_APB4_DES },
-	{ .addr_lo = 0x58005400, .addr_hi = 0x580057FF, .name = "SA14", .bus_des = BSP_UTILS_APB4_DES },
+	{ .addr_lo = 0x58005400, .addr_hi = 0x580057FF, .name = "SAI4", .bus_des = BSP_UTILS_APB4_DES },
 	{ .addr_lo = 0x58006400, .addr_hi = 0x58006BFF, .name = "RESERVED", .bus_des = BSP_UTILS_APB4_DES },
 	{ .addr_lo = 0x58020000, .addr_hi = 0x580203FF, .name = "GPIOA", .bus_des = BSP_UTILS_APB4_DES },
 	{ .addr_lo = 0x58020400, .addr_hi = 0x580207FF, .name = "GPIOB", .bus_des = BSP_UTILS_APB4_DES },
@@ -153,37 +139,175 @@ static const struct bsp_utils_periph_des bsp_utils_periph_des[] = {
 };
 
 /**
- * @brief get the descriptor of the peripheral that specified by name or address.
- * @param des .addr_lo or .name is used to match the specified periphral. 
- *            the address is prior to the name if both of them are set.
- *            the mechanism for matching peripheral descriptors is as follows: if 
+ * @brief Get the descriptor of the peripheral that specified by name or address.
+ * @param des .addr_lo or .name is used to match the specified periphral.
+ *            The address is prior to the name if both of them are set.
+ *            The mechanism for matching peripheral descriptors is as follows: If 
  *            .addr_lo is set, it represents an address within the peripheral address
- *            range (inclusive) to be matched; if .name is set, it matches byperipheral name.
- *            if the desired peripheral is matched, the peripheral descriptor is returned 
+ *            range (inclusive) to be matched; If .name is set, it matches byperipheral name.
+ *            If the desired peripheral is matched, the peripheral descriptor is returned 
  *            from this parameter. therefore, this pointer parameter must be pre-allocated.
- *            if no peripheral is matched, this parameter will leave untouched.
- * @return 0 - found; 1 - not found
+ *            If no peripheral is matched, this parameter will leave untouched.
+ * @return errno (-ENODEV or -EINVAL) or pointer to des. error - no match found; pointer - matched
  */
-int bsp_utils_get_periph(struct bsp_utils_periph_des *des)
+struct bsp_utils_periph_des *bsp_utils_get_periph(struct bsp_utils_periph_des *des)
 {
 	size_t i = 0;
 	size_t array_size = ARRAY_SIZE(bsp_utils_periph_des);
 	if (des->addr_lo) {
-		while (bsp_utils_bus_des[i++].addr_lo < des->addr_lo && i < array_size);
+		while (bsp_utils_periph_des[i++].addr_lo < des->addr_lo && i < array_size);
 		i--;
-		if (bsp_utils_bus_des[i].addr_hi < des->addr_lo)
-			return 1;
-		memcpy(des, &(bsp_utils_bus_des[i]), sizeof(*des));
+		if (bsp_utils_periph_des[i].addr_hi < des->addr_lo)
+			return ERR_PTR(-ENODEV);
+		memcpy(des, &(bsp_utils_periph_des[i]), sizeof(*des));
 	} else if (des->name) {
-		for (size_t i = 0; i < array_size; i++) {
-			if (strncmp(bsp_utils_bus_des[i].name, des->name, 10))
+		for (i = 0; i < array_size; i++) {
+			if (!strncmp(bsp_utils_periph_des[i].name, des->name, 10))
 				break;
 		}
 		if (i == ARRAY_SIZE(bsp_utils_periph_des))
-			return 1;
-		memcpy(des, &(bsp_utils_bus_des[i]), sizeof(*des));
+			return ERR_PTR(-ENODEV);
+		memcpy(des, &(bsp_utils_periph_des[i]), sizeof(*des));
 	} else {
-		return 1;
+		return ERR_PTR(-EINVAL);
 	}
+	return des;
+}
+
+#define __BSP_UTILS_CLK_CASE(pheriph, state)                 \
+	case pheriph##_BASE:                                 \
+		if (state)                                   \
+			__HAL_RCC_##pheriph##_CLK_ENABLE();  \
+		else                                         \
+			__HAL_RCC_##pheriph##_CLK_DISABLE(); \
+		break
+#define __BSP_UTILS_CLK_CASE2(base_name, pheriph, state)     \
+	case base_name##_BASE:                               \
+		if (state)                                   \
+			__HAL_RCC_##pheriph##_CLK_ENABLE();  \
+		else                                         \
+			__HAL_RCC_##pheriph##_CLK_DISABLE(); \
+		break
+/**
+ * @brief Enable or disable clock of the peripheral.
+ * @param des .addr_lo or .name is used to match the specified periphral. see @ref bsp_utils_get_periph
+ * @param state ENABLE or DISABLE
+ * @return Returns 0 on success, otherwise returns a negative error code
+ */
+int bsp_utils_periph_clk(struct bsp_utils_periph_des *des, FunctionalState state)
+{
+	struct bsp_utils_periph_des *res = bsp_utils_get_periph(des);
+	if (!IS_FUNCTIONAL_STATE(state))
+		return -EINVAL;
+	if (IS_ERR(res))
+		return -ENODEV;
+
+	switch (res->addr_lo) {
+		__BSP_UTILS_CLK_CASE(MDMA, state);
+		__BSP_UTILS_CLK_CASE(TIM2, state);
+		__BSP_UTILS_CLK_CASE(TIM4, state);
+		__BSP_UTILS_CLK_CASE(TIM5, state);
+		__BSP_UTILS_CLK_CASE(TIM6, state);
+		__BSP_UTILS_CLK_CASE(TIM7, state);
+		__BSP_UTILS_CLK_CASE(TIM12, state);
+		__BSP_UTILS_CLK_CASE(TIM13, state);
+		__BSP_UTILS_CLK_CASE(TIM14, state);
+		__BSP_UTILS_CLK_CASE(LPTIM1, state);
+		__BSP_UTILS_CLK_CASE(SPI2, state);
+		__BSP_UTILS_CLK_CASE(SPI3, state);
+		__BSP_UTILS_CLK_CASE(SPDIFRX, state);
+		__BSP_UTILS_CLK_CASE(USART2, state);
+		__BSP_UTILS_CLK_CASE(USART3, state);
+		__BSP_UTILS_CLK_CASE(UART4, state);
+		__BSP_UTILS_CLK_CASE(UART5, state);
+		__BSP_UTILS_CLK_CASE(I2C1, state);
+		__BSP_UTILS_CLK_CASE(I2C2, state);
+		__BSP_UTILS_CLK_CASE(I2C3, state);
+		__BSP_UTILS_CLK_CASE(CEC, state);
+		__BSP_UTILS_CLK_CASE2(DAC1, DAC12, state);
+		__BSP_UTILS_CLK_CASE(UART7, state);
+		__BSP_UTILS_CLK_CASE(UART8, state);
+		__BSP_UTILS_CLK_CASE(CRS, state);
+		__BSP_UTILS_CLK_CASE(SWPMI1, state);
+		__BSP_UTILS_CLK_CASE(OPAMP, state);
+		__BSP_UTILS_CLK_CASE(MDIOS, state);
+		__BSP_UTILS_CLK_CASE2(FDCAN1, FDCAN, state);
+		__BSP_UTILS_CLK_CASE2(FDCAN2, FDCAN, state);
+		__BSP_UTILS_CLK_CASE(TIM1, state);
+		__BSP_UTILS_CLK_CASE(TIM8, state);
+		__BSP_UTILS_CLK_CASE(USART1, state);
+		__BSP_UTILS_CLK_CASE(USART6, state);
+		__BSP_UTILS_CLK_CASE(SPI1, state);
+		__BSP_UTILS_CLK_CASE(SPI4, state);
+		__BSP_UTILS_CLK_CASE(TIM15, state);
+		__BSP_UTILS_CLK_CASE(TIM16, state);
+		__BSP_UTILS_CLK_CASE(TIM17, state);
+		__BSP_UTILS_CLK_CASE(SPI5, state);
+		__BSP_UTILS_CLK_CASE(SAI1, state);
+		__BSP_UTILS_CLK_CASE(SAI2, state);
+		__BSP_UTILS_CLK_CASE(SAI3, state);
+		__BSP_UTILS_CLK_CASE(DFSDM1, state);
+		__BSP_UTILS_CLK_CASE(HRTIM1, state);
+		__BSP_UTILS_CLK_CASE(DMA1, state);
+		__BSP_UTILS_CLK_CASE(DMA2, state);
+		__BSP_UTILS_CLK_CASE2(ADC1, ADC12, state);
+		__BSP_UTILS_CLK_CASE2(ADC2, ADC12, state);
+	case ETH_BASE:
+		if (state) {
+			__HAL_RCC_ETH1MAC_CLK_ENABLE();
+			__HAL_RCC_ETH1RX_CLK_ENABLE();
+			__HAL_RCC_ETH1TX_CLK_ENABLE();
+		} else {
+			__HAL_RCC_ETH1MAC_CLK_DISABLE();
+			__HAL_RCC_ETH1RX_CLK_DISABLE();
+			__HAL_RCC_ETH1TX_CLK_DISABLE();
+		}
+		break;
+		__BSP_UTILS_CLK_CASE2(USB1_OTG_HS_PERIPH, USB1_OTG_HS, state);
+		__BSP_UTILS_CLK_CASE2(USB2_OTG_FS_PERIPH, USB2_OTG_FS, state);
+		__BSP_UTILS_CLK_CASE(DCMI, state);
+		__BSP_UTILS_CLK_CASE(RNG, state);
+		__BSP_UTILS_CLK_CASE(SDMMC2, state);
+		__BSP_UTILS_CLK_CASE2(DLYB_SDMMC2, SDMMC2, state);
+		__BSP_UTILS_CLK_CASE(LTDC, state);
+		__BSP_UTILS_CLK_CASE(WWDG1, state);
+		__BSP_UTILS_CLK_CASE(DMA2D, state);
+		__BSP_UTILS_CLK_CASE2(JPGDEC, JPGDECEN, state);
+		__BSP_UTILS_CLK_CASE2(FMC_R, FMC, state);
+		__BSP_UTILS_CLK_CASE2(QSPI_R, QSPI, state);
+		__BSP_UTILS_CLK_CASE2(DLYB_QSPI, QSPI, state);
+		__BSP_UTILS_CLK_CASE(SDMMC1, state);
+		__BSP_UTILS_CLK_CASE2(DLYB_SDMMC1, SDMMC1, state);
+		__BSP_UTILS_CLK_CASE(SYSCFG, state);
+		__BSP_UTILS_CLK_CASE(LPUART1, state);
+		__BSP_UTILS_CLK_CASE(SPI6, state);
+		__BSP_UTILS_CLK_CASE(I2C4, state);
+		__BSP_UTILS_CLK_CASE(LPTIM2, state);
+		__BSP_UTILS_CLK_CASE(LPTIM3, state);
+		__BSP_UTILS_CLK_CASE(LPTIM4, state);
+		__BSP_UTILS_CLK_CASE(LPTIM5, state);
+		__BSP_UTILS_CLK_CASE(COMP12, state);
+		__BSP_UTILS_CLK_CASE2(VREFBUF, VREF, state);
+		__BSP_UTILS_CLK_CASE(RTC, state);
+		__BSP_UTILS_CLK_CASE(SAI4, state);
+		__BSP_UTILS_CLK_CASE(GPIOA, state);
+		__BSP_UTILS_CLK_CASE(GPIOB, state);
+		__BSP_UTILS_CLK_CASE(GPIOC, state);
+		__BSP_UTILS_CLK_CASE(GPIOD, state);
+		__BSP_UTILS_CLK_CASE(GPIOE, state);
+		__BSP_UTILS_CLK_CASE(GPIOF, state);
+		__BSP_UTILS_CLK_CASE(GPIOG, state);
+		__BSP_UTILS_CLK_CASE(GPIOH, state);
+		__BSP_UTILS_CLK_CASE(GPIOI, state);
+		__BSP_UTILS_CLK_CASE(GPIOJ, state);
+		__BSP_UTILS_CLK_CASE(GPIOK, state);
+		__BSP_UTILS_CLK_CASE(CRC, state);
+		__BSP_UTILS_CLK_CASE(BDMA, state);
+		__BSP_UTILS_CLK_CASE(ADC3, state);
+		__BSP_UTILS_CLK_CASE(HSEM, state);
+	default:
+		return -EINVAL;
+	}
+
 	return 0;
 }

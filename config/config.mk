@@ -6,7 +6,7 @@ DEBUGGER := JLINK
 # DEBUGGER := STLINK
 
 CUBEPROGDIR := /opt/st/stm32cubeclt/STM32CubeProgrammer/bin/
-JLINKDIR := /home/miaow/software/jlink_v794i/
+JLINKDIR := /home/miaow/software/jlink_v794e/
 
 TGTIMG := intflash
 # TGTIMG := sdcard
@@ -40,7 +40,7 @@ ARCHS := -mcpu=cortex-m7 \
 -mfpu=fpv5-d16
 
 DEBUGS := -g -ggdb3
-OPTIMS := -Og
+OPTIMS := -O0
 FUNCS := \
 -fmacro-prefix-map=./= \
 -fno-common \
