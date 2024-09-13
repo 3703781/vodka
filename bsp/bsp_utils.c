@@ -155,8 +155,8 @@ struct bsp_utils_periph_des *bsp_utils_get_periph(struct bsp_utils_periph_des *d
 	size_t i = 0;
 	size_t array_size = ARRAY_SIZE(bsp_utils_periph_des);
 	if (des->addr_lo) {
-		while (bsp_utils_periph_des[i++].addr_lo < des->addr_lo && i < array_size);
-		i--;
+		while (bsp_utils_periph_des[i++].addr_lo <= des->addr_lo && i < array_size);
+		i -= 2;
 		if (bsp_utils_periph_des[i].addr_hi < des->addr_lo)
 			return ERR_PTR(-ENODEV);
 		memcpy(des, &(bsp_utils_periph_des[i]), sizeof(*des));

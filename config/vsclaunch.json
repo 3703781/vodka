@@ -12,12 +12,12 @@
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "jlink",
-            "serverpath": "/home/miaow/software/jlink_v794i/JLinkGDBServer",
+            "serverpath": "/opt/st/stm32cubeide_1.16.0/plugins/com.st.stm32cube.ide.mcu.externaltools.jlink.linux64_2.2.300.202405301257/tools/bin/JLinkGDBServer",
             "runToEntryPoint": "main",
             "device": "STM32H743XI",
             "interface": "swd",
             "svdFile": "${workspaceFolder}/config/stm32h743.svd",
-            "armToolchainPath": "/opt/st/stm32cubeclt/GNU-tools-for-STM32/bin",
+            "armToolchainPath": "/opt/st/stm32cubeide_1.16.0/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.linux64_1.0.200.202406132123/tools/bin",
             "swoConfig": {
                 "source": "probe",
                 "enabled": true,
@@ -39,7 +39,7 @@
             "preLaunchTask": "make",
             "executable": "${workspaceFolder}/m7proj-h7.elf",
             "request": "launch",
-            "stm32cubeprogrammer": "/opt/st/stm32cubeclt/STM32CubeProgrammer/bin",
+            "stm32cubeprogrammer": "/opt/st/stm32cubeide_1.16.0/plugins/com.st.stm32cube.ide.mcu.externaltools.cubeprogrammer.linux64_2.1.400.202404281720/tools/bin",
             "type": "cortex-debug",
             "servertype": "stlink",
             "serverArgs": [
@@ -53,7 +53,7 @@
             "interface": "swd",
             "runToEntryPoint": "main",
             "svdFile": "${workspaceFolder}/config/stm32h743.svd",
-            "armToolchainPath": "/opt/st/stm32cubeclt/GNU-tools-for-STM32/bin",
+            "armToolchainPath": "/opt/st/stm32cubeide_1.16.0/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.linux64_1.0.200.202406132123/tools/bin",
             "showDevDebugOutput": "raw",
             "swoConfig": {
                 "enabled": true,

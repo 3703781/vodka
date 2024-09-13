@@ -374,6 +374,7 @@ void HAL_LTDC_LineEventCallback(LTDC_HandleTypeDef *hltdc)
 		*(uint32_t *)tmp = color;
 		tmp += 3;
 	}
+	__DSB();
 	SCB_CleanInvalidateDCache();
 	HAL_LTDC_ProgramLineEvent(&des->_hltdc, des->_hltdc.Init.AccumulatedActiveH + 1);
 	__HAL_LTDC_CLEAR_FLAG(hltdc, LTDC_FLAG_LI);

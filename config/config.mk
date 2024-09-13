@@ -1,12 +1,12 @@
 ABSPROJDIR := /home/miaow/m7proj-h7/
 
-PREFIX := /home/miaow/software/arm-none-eabi-13.2.rel1/bin/arm-none-eabi-
+PREFIX := /opt/st/stm32cubeide_1.16.0/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.linux64_1.0.200.202406132123/tools/bin/arm-none-eabi-
 
 DEBUGGER := JLINK
 # DEBUGGER := STLINK
 
-CUBEPROGDIR := /opt/st/stm32cubeclt/STM32CubeProgrammer/bin/
-JLINKDIR := /home/miaow/software/jlink_v794e/
+CUBEPROGDIR := /opt/st/stm32cubeide_1.16.0/plugins/com.st.stm32cube.ide.mcu.externaltools.cubeprogrammer.linux64_2.1.400.202404281720/tools/bin/
+JLINKDIR := /opt/st/stm32cubeide_1.16.0/plugins/com.st.stm32cube.ide.mcu.externaltools.jlink.linux64_2.2.300.202405301257/tools/bin/
 
 TGTIMG := intflash
 # TGTIMG := sdcard
@@ -48,8 +48,9 @@ FUNCS := \
 -fno-dwarf2-cfi-asm \
 -fno-allow-store-data-races \
 -ftrivial-auto-var-init=zero \
--fno-stack-clash-protection \
--fstrict-flex-arrays=3
+-fno-stack-clash-protection
+# -fstrict-flex-arrays=3
+
 WARNS := \
 -Wall \
 -Wundef \
@@ -67,7 +68,6 @@ WARNS := \
 -Werror=designated-init \
 -Wenum-conversion
 
-# SYSROOT := --sysroot=/home/miaow/software/arm-none-eabi-13.2.rel1/arm-none-eabi
 SYSROOT :=
 
 LIBS := -lc -lm -lgcc

@@ -122,7 +122,7 @@ static int get_dma_request(struct bsp_tty_des *des, uint8_t tx_rx, uint32_t *req
 	int uart_idx = get_uart_idx(des);
 	if (uart_idx)
 		return -ENODEV;
-	*request = dma_req_tb[uart_idx][tx_rx];
+	*request = dma_req_tb[uart_idx][!tx_rx];
 	return 0;
 }
 
@@ -220,7 +220,7 @@ static int init_uart(struct bsp_tty_des *des)
 
 	} else {
 		PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART234578;
-		PeriphClkInitStruct.Usart16ClockSelection = RCC_USART234578CLKSOURCE_D2PCLK1;
+		PeriphClkInitStruct.Usart234578ClockSelection = RCC_USART234578CLKSOURCE_D2PCLK1;
 		if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
 			return -EAGAIN;
 	}
@@ -399,8 +399,21 @@ static size_t write(struct bsp_tty_des *des, const char *buf, size_t count)
 	}
 	NVIC_EnableIRQ(dma_irq);
 	start_tx(&des->_hdma_uart_tx);
+
+	// Clear the TC flag in the ICR register
+	__HAL_UART_CLEAR_FLAG(&des->_huart, UART_CLEAR_TCF);
+
+	// Enable the DMA transfer for transmit request by setting the DMAT bit in the UART CR3 register
+	ATOMIC_SET_BIT(des->_huart.Instance->CR3, USART_CR3_DMAT);
 	return count;
 }
+
+typedef struct
+{
+  __IO uint32_t ISR;   /*!< DMA interrupt status register */
+  __IO uint32_t Reserved0;
+  __IO uint32_t IFCR;  /*!< DMA interrupt flag clear register */
+} DMA_Base_Registers;
 
 static void start_tx(DMA_HandleTypeDef *hdma)
 {
@@ -415,8 +428,11 @@ static void start_tx(DMA_HandleTypeDef *hdma)
 		return;
 
 	// disable DMA
-	CLEAR_BIT(des->dma_tx->CR, DMA_SxCR_EN);
+	CLEAR_BIT(des->dma_tx->CR, DMA_SxCR_EN | DMA_SxCR_DBM);
 	while (READ_BIT(des->dma_tx->CR, DMA_SxCR_EN)); // wait for the current trans
+
+	// Clear all interrupt flags at correct offset within the register
+	((DMA_Base_Registers *)hdma->StreamBaseAddress)->IFCR = 0x3FUL << (hdma->StreamIndex & 0x1FU);
 
 	// We assumed that all the data will be sent. However, there is chance that not all
 	// the bytes are sent. So revert the read point to the next byte of the position
@@ -424,14 +440,17 @@ static void start_tx(DMA_HandleTypeDef *hdma)
 	des->_tx_rd_ptr -= dma->NDTR;
 	count = des->_tx_rd_ptr < des->_tx_wr_ptr ? des->_tx_wr_ptr - des->_tx_rd_ptr :
 						    &_etty_int_dtcm - des->_tx_rd_ptr;
-	des->_tx_rd_ptr += count; // assuming that all the data will be sent
-	if (des->_tx_rd_ptr >= &_etty_int_dtcm)
-		des->_tx_rd_ptr = &_stty_int_dtcm;
 
 	// set dma parameters
 	dma->NDTR = count;
 	dma->M0AR = (uint32_t)des->_tx_rd_ptr; // only source address here. destination address is set when init
-	SET_BIT(des->dma_tx->CR, DMA_SxCR_EN); // start to send
+
+	des->_tx_rd_ptr += count; // assuming that all the data will be sent
+	if (des->_tx_rd_ptr >= &_etty_int_dtcm)
+		des->_tx_rd_ptr = &_stty_int_dtcm;
+
+	__HAL_DMA_ENABLE(hdma); // start to send
+	// SET_BIT(des->dma_tx->CR, DMA_SxCR_EN); // start to send
 }
 
 static size_t read(struct bsp_tty_des *des, char *buf, size_t count)

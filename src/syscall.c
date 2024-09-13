@@ -11,7 +11,6 @@
 
 static uint32_t fd_to_itm_instance[] = { 1, 1, 1 };
 
-
 ssize_t _read(int fd, void *buf, size_t count)
 {
 	UNUSED(fd);
@@ -31,6 +30,7 @@ off_t _lseek(int fd, off_t offset, int whence)
 
 ssize_t _write(int fd, const void *buf, size_t count)
 {
+	static struct bsp_module *mod = NULL;
 	if (fd < 0 || buf == NULL || count < 0) {
 		errno = EBADF;
 		return -1;
@@ -41,6 +41,13 @@ ssize_t _write(int fd, const void *buf, size_t count)
 
 	for (size_t i = 0; i < count; i++) {
 		ITM_SendChar(((char *)buf)[i], fd_to_itm_instance[fd]);
+	}
+	if (mod == NULL)
+		mod = bsp_module_find("TTY1");
+
+	if (mod && mod->state == BSP_MODULE_STATE_LIVE) {
+		struct bsp_tty_des *des = (struct bsp_tty_des *)mod->descriptor;
+		des->ops.write(des, buf, count);
 	}
 	return count;
 }
@@ -187,7 +194,6 @@ void _init(void)
 
 int _fcntl(int fd, int cmd, ...)
 {
-	
 	return -1;
 }
 
