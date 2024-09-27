@@ -423,18 +423,23 @@ static size_t write(struct bsp_tty_des *des, const char *buf, size_t count)
 	if (get_dma_irq(des, 1, &dma_irq, 0))
 		return 0;
 
+	// disable and wait for the current isr to finish
 	NVIC_DisableIRQ(dma_irq);
+	while (NVIC_GetActive(dma_irq));
 
 	// disable DMA and wait for the current trans
+	// We are to sync and set all necessary fields.
+	// So, no further dma isr is needed and pending status should be cleared immediately.
 	CLEAR_BIT(dma->CR, DMA_SxCR_EN);
 	while (READ_BIT(dma->CR, DMA_SxCR_EN));
+	NVIC_ClearPendingIRQ(dma_irq);
 
 	// We assumed that all the data will be sent. However, there is chance that not all
 	// the bytes are sent. So get the read point to the next byte of the position
 	// that dma had just read from.
 	tx_rd_ptr = get_real_tx_rd_ptr(des);
 	if (IS_ERR(tx_rd_ptr))
-		return 0;
+		return 0;	
 
 	// if ring buffer overflow, wait
 	if (des->_tx_wr_total_bytes + count - des->_tx_rd_total_bytes > (uint32_t)&TTY_SIZE) {
