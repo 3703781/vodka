@@ -15,6 +15,12 @@
 			(var) = (val); \
 	} while (0)
 
+#define SET_VAL_IF_NOT_ZERO(var, val)  \
+	do {                           \
+		if ((var) != 0)        \
+			(var) = (val); \
+	} while (0)
+
 #define SET_VAL_IF_NULL(var, val)      \
 	do {                           \
 		if ((var) == NULL)     \

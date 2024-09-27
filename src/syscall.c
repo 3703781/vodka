@@ -47,7 +47,7 @@ ssize_t _write(int fd, const void *buf, size_t count)
 
 	if (mod && mod->state == BSP_MODULE_STATE_LIVE) {
 		struct bsp_tty_des *des = (struct bsp_tty_des *)mod->descriptor;
-		des->ops.write(des, buf, count);
+		count = des->ops.write(des, buf, count);
 	}
 	return count;
 }

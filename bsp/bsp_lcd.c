@@ -365,7 +365,7 @@ void bsp_lcd_cpybuf(struct bsp_lcd_des *des, uint16_t x, uint16_t y, uint16_t wi
 void HAL_LTDC_LineEventCallback(LTDC_HandleTypeDef *hltdc)
 {
 	struct bsp_lcd_des *des = CONTAINER_OF(hltdc, struct bsp_lcd_des, _hltdc);
-	des->bklt_ops.set_brightness(128);
+	des->bklt_ops.set_brightness(60);
 
 	uint32_t color = (uint32_t)rand();
 	uint8_t *tmp = des->layer_gram_addr[0];

@@ -8,11 +8,9 @@
  */
 int main(void)
 {
-	int i = 0;
 	while (1) {
-		i++;
-		printf("%d\n", i);
-		HAL_Delay(1000);
+		printf("%llu\r\n", bsp_debug_tsg_get());
+		HAL_Delay(500);
 	}
 
 	return 0;

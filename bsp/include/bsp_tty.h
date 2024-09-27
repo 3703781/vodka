@@ -31,6 +31,8 @@ struct bsp_tty_des {
 	DMA_HandleTypeDef _hdma_uart_rx;
 	uint8_t *_tx_rd_ptr;
 	uint8_t *_tx_wr_ptr;
+	uint64_t _tx_rd_total_bytes;
+	uint64_t _tx_wr_total_bytes;
 };
 
 extern struct bsp_module bsp_tty_mod;

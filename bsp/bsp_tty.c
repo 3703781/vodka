@@ -8,7 +8,7 @@ static size_t write(struct bsp_tty_des *des, const char *buf, size_t count);
 static size_t read(struct bsp_tty_des *des, char *buf, size_t count);
 static void start_tx(DMA_HandleTypeDef *hdma);
 
-extern uint8_t _stty_int_dtcm, _etty_int_dtcm;
+extern uint8_t _stty_int_sram_d1, _etty_int_sram_d1, TTY_SIZE;
 
 struct bsp_module bsp_tty_mod = { .name = "TTY1",
 				  .state = BSP_MODULE_STATE_COMING,
@@ -193,8 +193,10 @@ static void *set_default_des(void *des)
 	SET_VAL_IF_NULL(int_des->dma_rx, DMA1_Stream1);
 	SET_VAL_IF_NULL(int_des->ops.write, write);
 	SET_VAL_IF_NULL(int_des->ops.read, read);
-	SET_VAL_IF_NULL(int_des->_tx_rd_ptr, (uint8_t *)&_stty_int_dtcm);
-	SET_VAL_IF_NULL(int_des->_tx_wr_ptr, (uint8_t *)&_stty_int_dtcm);
+	SET_VAL_IF_NULL(int_des->_tx_rd_ptr, (uint8_t *)&_stty_int_sram_d1);
+	SET_VAL_IF_NULL(int_des->_tx_wr_ptr, (uint8_t *)&_stty_int_sram_d1);
+	SET_VAL_IF_NOT_ZERO(int_des->_tx_rd_total_bytes, 0);
+	SET_VAL_IF_NOT_ZERO(int_des->_tx_wr_total_bytes, 0);
 
 	return int_des;
 }
@@ -243,6 +245,8 @@ static int init_uart(struct bsp_tty_des *des)
 		return -EAGAIN;
 	if (HAL_UARTEx_DisableFifoMode(&des->_huart) != HAL_OK)
 		return -EAGAIN;
+
+	ATOMIC_SET_BIT(des->_huart.Instance->CR3, USART_CR3_DMAT);
 	return 0;
 }
 
@@ -298,19 +302,6 @@ static int init_dma(struct bsp_tty_des *des)
 	if (res)
 		return res;
 
-	// DMA interrupt
-	res = get_dma_irq(des, 1, &dma_irq, 1);
-	if (res)
-		return res;
-	HAL_NVIC_SetPriority(dma_irq, 0, 0);
-	HAL_NVIC_EnableIRQ(dma_irq);
-
-	res = get_dma_irq(des, 0, &dma_irq, 1);
-	if (res)
-		return res;
-	HAL_NVIC_SetPriority(dma_irq, 0, 0);
-	HAL_NVIC_EnableIRQ(dma_irq);
-
 	// DMA init
 	des->_hdma_uart_tx.Instance = des->dma_tx;
 	res = get_dma_request(des, 1, &request);
@@ -325,6 +316,8 @@ static int init_dma(struct bsp_tty_des *des)
 	des->_hdma_uart_tx.Init.Mode = DMA_NORMAL;
 	des->_hdma_uart_tx.Init.Priority = DMA_PRIORITY_LOW;
 	des->_hdma_uart_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+	des->_hdma_uart_tx.Init.MemBurst = DMA_MBURST_SINGLE;
+	des->_hdma_uart_tx.Init.PeriphBurst = DMA_MBURST_SINGLE;
 	des->_hdma_uart_tx.XferCpltCallback = start_tx;
 	if (HAL_DMA_Init(&des->_hdma_uart_tx) != HAL_OK)
 		return -EAGAIN;
@@ -348,6 +341,19 @@ static int init_dma(struct bsp_tty_des *des)
 		return -EAGAIN;
 
 	__HAL_LINKDMA(&des->_huart, hdmarx, des->_hdma_uart_rx);
+
+	// DMA interrupt
+	res = get_dma_irq(des, 1, &dma_irq, 1);
+	if (res)
+		return res;
+	HAL_NVIC_SetPriority(dma_irq, 0, 0);
+	HAL_NVIC_EnableIRQ(dma_irq);
+
+	res = get_dma_irq(des, 0, &dma_irq, 1);
+	if (res)
+		return res;
+	HAL_NVIC_SetPriority(dma_irq, 0, 0);
+	HAL_NVIC_EnableIRQ(dma_irq);
 
 	MODIFY_REG(((DMA_Stream_TypeDef *)des->_hdma_uart_tx.Instance)->CR,
 		   (DMA_IT_TC | DMA_IT_TE | DMA_IT_DME | DMA_IT_HT), (DMA_IT_TC));
@@ -374,83 +380,128 @@ static int bsp_tty_init(void *des)
 	if (res)
 		return res;
 
-	res = init_dma(int_des);
+	res = init_uart(int_des);
 	if (res)
 		return res;
 
-	res = init_uart(int_des);
+	res = init_dma(int_des);
 	if (res)
 		return res;
 
 	return 0;
 }
 
+static uint8_t *get_real_tx_rd_ptr(struct bsp_tty_des *des)
+{
+	DMA_Stream_TypeDef *dma = (DMA_Stream_TypeDef *)des->dma_tx;
+	uint8_t *real_ptr = NULL;
+
+	if (READ_BIT(dma->CR, DMA_SxCR_EN))
+		return ERR_PTR(-EBUSY);
+
+	real_ptr = des->_tx_rd_ptr - dma->NDTR;
+	des->_tx_rd_total_bytes -= dma->NDTR;
+	if (real_ptr < &_stty_int_sram_d1)
+		real_ptr += (uint32_t)&TTY_SIZE;
+	return real_ptr;
+}
+
+#define BSP_TTY_INC_PTR(ptr, num)                 \
+	do {                                      \
+		ptr += num;                       \
+		if (ptr >= &_etty_int_sram_d1)    \
+			ptr = &_stty_int_sram_d1; \
+	} while (0)
+
 static size_t write(struct bsp_tty_des *des, const char *buf, size_t count)
 {
 	IRQn_Type dma_irq;
+	DMA_Stream_TypeDef *dma = (DMA_Stream_TypeDef *)des->dma_tx;
+	uint8_t *tx_rd_ptr;
+	ssize_t new_count = count;
 
 	if (get_dma_irq(des, 1, &dma_irq, 0))
 		return 0;
+
 	NVIC_DisableIRQ(dma_irq);
-	while (count--) {
-		*des->_tx_wr_ptr++ = *buf++;
-		if (des->_tx_wr_ptr >= &_etty_int_dtcm)
-			des->_tx_wr_ptr = &_stty_int_dtcm;
+
+	// disable DMA and wait for the current trans
+	CLEAR_BIT(dma->CR, DMA_SxCR_EN);
+	while (READ_BIT(dma->CR, DMA_SxCR_EN));
+
+	// We assumed that all the data will be sent. However, there is chance that not all
+	// the bytes are sent. So get the read point to the next byte of the position
+	// that dma had just read from.
+	tx_rd_ptr = get_real_tx_rd_ptr(des);
+	if (IS_ERR(tx_rd_ptr))
+		return 0;
+
+	// if ring buffer overflow, wait
+	if (des->_tx_wr_total_bytes + count - des->_tx_rd_total_bytes > (uint32_t)&TTY_SIZE) {
+		new_count = tx_rd_ptr - des->_tx_wr_ptr;
+		if (new_count < 0)
+			new_count += (ssize_t)&TTY_SIZE;
+	}
+	des->_tx_wr_total_bytes += new_count;
+	count -= new_count;
+	while (new_count--) {
+		*des->_tx_wr_ptr = *buf++;
+		BSP_TTY_INC_PTR(des->_tx_wr_ptr, 1);
 	}
 	NVIC_EnableIRQ(dma_irq);
 	start_tx(&des->_hdma_uart_tx);
 
-	// Clear the TC flag in the ICR register
-	__HAL_UART_CLEAR_FLAG(&des->_huart, UART_CLEAR_TCF);
-
 	// Enable the DMA transfer for transmit request by setting the DMAT bit in the UART CR3 register
-	ATOMIC_SET_BIT(des->_huart.Instance->CR3, USART_CR3_DMAT);
-	return count;
+	return new_count;
 }
 
-typedef struct
-{
-  __IO uint32_t ISR;   /*!< DMA interrupt status register */
-  __IO uint32_t Reserved0;
-  __IO uint32_t IFCR;  /*!< DMA interrupt flag clear register */
+typedef struct {
+	__IO uint32_t ISR; /*!< DMA interrupt status register */
+	__IO uint32_t Reserved0;
+	__IO uint32_t IFCR; /*!< DMA interrupt flag clear register */
 } DMA_Base_Registers;
 
 static void start_tx(DMA_HandleTypeDef *hdma)
 {
 	uint32_t count;
-	extern uint8_t _stty_int_dtcm, _etty_int_dtcm;
 	struct bsp_tty_des *des =
 		CONTAINER_OF(CONTAINER_OF(&hdma->Init, DMA_HandleTypeDef, Init), struct bsp_tty_des, _hdma_uart_tx);
 	DMA_Stream_TypeDef *dma = (DMA_Stream_TypeDef *)des->dma_tx;
-
-	// we do nothing if read position equals to write position
-	if (des->_tx_rd_ptr == des->_tx_wr_ptr)
-		return;
+	uint8_t *real_ptr;
 
 	// disable DMA
-	CLEAR_BIT(des->dma_tx->CR, DMA_SxCR_EN | DMA_SxCR_DBM);
-	while (READ_BIT(des->dma_tx->CR, DMA_SxCR_EN)); // wait for the current trans
+	CLEAR_BIT(dma->CR, DMA_SxCR_EN);
+	while (READ_BIT(dma->CR, DMA_SxCR_EN)); // wait for the current trans
 
 	// Clear all interrupt flags at correct offset within the register
 	((DMA_Base_Registers *)hdma->StreamBaseAddress)->IFCR = 0x3FUL << (hdma->StreamIndex & 0x1FU);
 
 	// We assumed that all the data will be sent. However, there is chance that not all
 	// the bytes are sent. So revert the read point to the next byte of the position
-	// that dma had just touched.
-	des->_tx_rd_ptr -= dma->NDTR;
+	// that dma had just read from.
+	real_ptr = get_real_tx_rd_ptr(des);
+
+	// we do nothing if read position equals to write position
+	if (des->_tx_wr_total_bytes == des->_tx_rd_total_bytes)
+		return;
+
+	if (IS_ERR(real_ptr))
+		return;
+	des->_tx_rd_ptr = real_ptr;
 	count = des->_tx_rd_ptr < des->_tx_wr_ptr ? des->_tx_wr_ptr - des->_tx_rd_ptr :
-						    &_etty_int_dtcm - des->_tx_rd_ptr;
+						    &_etty_int_sram_d1 - des->_tx_rd_ptr;
 
 	// set dma parameters
 	dma->NDTR = count;
 	dma->M0AR = (uint32_t)des->_tx_rd_ptr; // only source address here. destination address is set when init
 
-	des->_tx_rd_ptr += count; // assuming that all the data will be sent
-	if (des->_tx_rd_ptr >= &_etty_int_dtcm)
-		des->_tx_rd_ptr = &_stty_int_dtcm;
+	// assuming that all the data will be sent
+	BSP_TTY_INC_PTR(des->_tx_rd_ptr, count);
+	des->_tx_rd_total_bytes += count;
 
-	__HAL_DMA_ENABLE(hdma); // start to send
-	// SET_BIT(des->dma_tx->CR, DMA_SxCR_EN); // start to send
+	// SCB_CleanDCache();
+	SCB_CleanDCache_by_Addr((uint32_t *)dma->M0AR, count);
+	SET_BIT(dma->CR, DMA_SxCR_EN); // start to send
 }
 
 static size_t read(struct bsp_tty_des *des, char *buf, size_t count)

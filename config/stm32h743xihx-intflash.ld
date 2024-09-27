@@ -129,14 +129,14 @@ SECTIONS
         PROVIDE_HIDDEN (_ebss_int_dtcm = .);
     } > int_dtcm
 
-    .tty.int_dtcm :
+    .tty.int_sram_d1 :
     {
         /* used for uart dma cache */
-        . = ALIGN(16);
-        PROVIDE_HIDDEN (_stty_int_dtcm = .);
+        . = ALIGN(32);
+        PROVIDE_HIDDEN (_stty_int_sram_d1 = .);
         . += TTY_SIZE;
-        PROVIDE_HIDDEN (_etty_int_dtcm = .);
-    } > int_dtcm
+        PROVIDE_HIDDEN (_etty_int_sram_d1 = .);
+    } > int_sram_d1
 
     .bss.ext_sdram :
     {
