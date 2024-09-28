@@ -448,8 +448,8 @@ static size_t write(struct bsp_tty_des *des, const char *buf, size_t count)
 			new_count += (ssize_t)&TTY_SIZE;
 	}
 	des->_tx_wr_total_bytes += new_count;
-	count -= new_count;
-	while (new_count--) {
+	count = new_count;
+	while (count--) {
 		*des->_tx_wr_ptr = *buf++;
 		BSP_TTY_INC_PTR(des->_tx_wr_ptr, 1);
 	}

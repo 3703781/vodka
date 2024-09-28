@@ -9,8 +9,9 @@
 int main(void)
 {
 	while (1) {
-		printf("%llu\r\n", bsp_debug_tsg_get());
-		HAL_Delay(500);
+		printf("%llu, ", bsp_debug_tsg_get());
+		HAL_Delay(rand() % 2);
+		// fflush(0);
 	}
 
 	return 0;
