@@ -5,7 +5,24 @@
 #include <stdarg.h>
 #include <errno.h>
 
+enum bsp_log_color {
+	BSP_LOG_COLOR_NRM = 0,
+	BSP_LOG_COLOR_RED,
+	BSP_LOG_COLOR_GRN,
+	BSP_LOG_COLOR_YEL,
+	BSP_LOG_COLOR_BLU,
+	BSP_LOG_COLOR_MAG,
+	BSP_LOG_COLOR_CYN,
+	BSP_LOG_COLOR_WHT,
+	BSP_LOG_COLOR_NUM
+};
+
 static const char *lvl_name[BSP_LOG_LVL_NUM] = { "TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "ALWAYS" };
+static const enum bsp_log_color lvl_color[BSP_LOG_LVL_NUM] = { BSP_LOG_COLOR_NRM, BSP_LOG_COLOR_NRM, BSP_LOG_COLOR_NRM,
+							       BSP_LOG_COLOR_YEL, BSP_LOG_COLOR_MAG, BSP_LOG_COLOR_RED,
+							       BSP_LOG_COLOR_CYN };
+static const char *color_str[BSP_LOG_COLOR_NUM] = { "\x1B[0m",	"\x1B[31m", "\x1B[32m", "\x1B[33m",
+						    "\x1B[34m", "\x1B[35m", "\x1B[36m", "\x1B[37m" };
 
 int bsp_log_init(void *des);
 int bsp_log_uninit(void *des);
@@ -48,122 +65,135 @@ static void *set_default_des(void *des)
 	SET_VAL_IF_NULL(int_des->_buf, calloc(int_des->buf_size, 1));
 	if (IS_ERR_OR_NULL(int_des->_buf))
 		return ERR_PTR(-ENOMEM);
+	SET_VAL_IF_NULL(int_des->_buf2, calloc(int_des->buf_size, 1));
+	if (IS_ERR_OR_NULL(int_des->_buf))
+		return ERR_PTR(-ENOMEM);
 	sys_slist_init(int_des->_subscribers);
-	SET_VAL_IF_NULL(int_des->log, log);
-	SET_VAL_IF_NULL(int_des->trace, trace);
-	SET_VAL_IF_NULL(int_des->debug, debug);
-	SET_VAL_IF_NULL(int_des->info, info);
-	SET_VAL_IF_NULL(int_des->warning, warning);
-	SET_VAL_IF_NULL(int_des->error, error);
-	SET_VAL_IF_NULL(int_des->critical, critical);
-	SET_VAL_IF_NULL(int_des->always, always);
-	SET_VAL_IF_NULL(int_des->get_timestamp, bsp_debug_tsg_get);
+	SET_VAL_IF_NULL(int_des->_get_timestamp, bsp_debug_tsg_get);
 
 	return int_des;
 }
 
-static void vlog(struct bsp_log_des *des, enum bsp_log_lvl level, const char *fmt, va_list arg)
+static void vlog(struct bsp_log_des *des, const char *fmt, va_list arg)
 {
 	struct bsp_log_subs *subs = NULL;
+	des->_level_name = lvl_name[(size_t)des->_level];
+	des->_time_stamp = des->get_timestamp();
+	des->_color = color_str[(size_t)lvl_color[(size_t)des->_level]];
 
-	vsnprintf(des->_buf, des->buf_size, fmt, arg);
+	des->_str_len = vsnprintf(des->_buf, des->buf_size, fmt, arg);
+	if (des->_str_len <= 0)
+		return;
 
 	SYS_SLIST_FOR_EACH_CONTAINER(&des->_subscribers, subs, node) {
-		if (level >= subs->threshold)
-			subs->message(des, level, lvl_name[(size_t)level]);
+		if (des->_level >= subs->threshold)
+			subs->message(des);
 	}
 }
 
-static inline void log(struct bsp_log_des *des, enum bsp_log_lvl level, const char *fmt, ...)
+void bsp_log_log(struct bsp_log_des *des, enum bsp_log_lvl level, const char *fmt, ...)
 {
 	va_list ap;
+	des->_level = level;
 	va_start(ap, fmt);
-	vlog(des, level, fmt, ap);
+	vlog(des, fmt, ap);
 	va_end(ap);
 }
 
-static inline void trace(struct bsp_log_des *des, const char *fmt, ...)
+void bsp_log_trace(struct bsp_log_des *des, const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
-	vlog(des, BSP_LOG_LVL_TRACE, fmt);
+	des->_level = BSP_LOG_LVL_TRACE;
+	vlog(des, fmt, ap);
 	va_end(ap);
 }
 
-static inline void debug(struct bsp_log_des *des, const char *fmt, ...)
+void bsp_log_debug(struct bsp_log_des *des, const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
-	vlog(des, BSP_LOG_LVL_DEBUG, fmt);
+	des->_level = BSP_LOG_LVL_DEBUG;
+	vlog(des, fmt, ap);
 	va_end(ap);
 }
 
-static inline void info(struct bsp_log_des *des, const char *fmt, ...)
+void bsp_log_info(struct bsp_log_des *des, const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
-	vlog(des, BSP_LOG_LVL_INFO, fmt);
+	des->_level = BSP_LOG_LVL_INFO;
+	vlog(des, fmt, ap);
 	va_end(ap);
 }
 
-static inline void warning(struct bsp_log_des *des, const char *fmt, ...)
+void bsp_log_warning(struct bsp_log_des *des, const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
-	vlog(des, BSP_LOG_LVL_WARNING, fmt);
+	des->_level = BSP_LOG_LVL_WARNING;
+	vlog(des, fmt, ap);
 	va_end(ap);
 }
 
-static inline void error(struct bsp_log_des *des, const char *fmt, ...)
+void bsp_log_error(struct bsp_log_des *des, const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
-	vlog(des, BSP_LOG_LVL_ERROR, fmt);
+	des->_level = BSP_LOG_LVL_ERROR;
+	vlog(des, fmt, ap);
 	va_end(ap);
 }
 
-static inline void critical(struct bsp_log_des *des, const char *fmt, ...)
+void bsp_log_critical(struct bsp_log_des *des, const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
-	vlog(des, BSP_LOG_LVL_CRITICAL, fmt);
+	des->_level = BSP_LOG_LVL_CRITICAL;
+	vlog(des, fmt, ap);
 	va_end(ap);
 }
 
-static inline void always(struct bsp_log_des *des, const char *fmt, ...)
+void bsp_log_always(struct bsp_log_des *des, const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
-	vlog(des, BSP_LOG_LVL_ALWAYS, fmt);
+	des->_level = BSP_LOG_LVL_ALWAYS;
+	vlog(des, fmt, ap);
 	va_end(ap);
 }
 
-static void message(enum bsp_log_lvl level, char *str_level, char *msg)
+static void tty1(struct bsp_log_des *des)
 {
-	static struct bsp_module * mod = NULL;
-	(void)level;
+	static struct bsp_module *mod = NULL;
+	const char *const level_name = (size_t)des->_level_name;
 	if (mod == NULL)
 		mod = bsp_module_find("TTY1");
 
 	if (mod && mod->state == BSP_MODULE_STATE_LIVE) {
 		struct bsp_tty_des *des = (struct bsp_tty_des *)mod->descriptor;
+		vsnprintf(des->_buf2, des->buf_size,
+			  "[%f] %s %s %s:", );
+		des->ops.write(des, msg, strlen(msg));
 		des->ops.write(des, msg, strlen(msg));
 	}
 }
 
+static void itm_ch1(struct bsp_log_des *des)
+{
+	for (size_t i = 0; i < count; i++) {
+		ITM_SendChar(msg[i], 1);
+	}
+}
+
 int bsp_log_init(void *des)
-{	#define KNRM  "\x1B[0m"
-	#define KRED  "\x1B[31m"
-	#define KGRN  "\x1B[32m"
-	#define KYEL  "\x1B[33m"
-	#define KBLU  "\x1B[34m"
-	#define KMAG  "\x1B[35m"
-	#define KCYN  "\x1B[36m"
-	#define KWHT  "\x1B[37m"
+{
 	struct bsp_log_des *int_des = (struct bsp_log_des *)des;
 	if (int_des == NULL)
 		return -ENXIO;
-	if (bsp_log_subscribe(int_des, message, BSP_LOG_LVL_INFO))
+	if (bsp_log_subscribe(int_des, tty1, BSP_LOG_LVL_INFO))
+		return -EIO;
+	if (bsp_log_subscribe(int_des, itm_ch1, BSP_LOG_LVL_INFO))
 		return -EIO;
 
 	return 0;
@@ -179,12 +209,13 @@ int bsp_log_uninit(void *des)
 	struct bsp_log_des *int_des = (struct bsp_log_des *)des;
 	free(int_des->_buf);
 	int_des->_buf = NULL;
+	free(int_des->_buf2);
+	int_des->_buf2 = NULL;
 	sys_snode_t *node;
 	struct bsp_log_subs *subs;
 	while (node = sys_slist_get(&int_des->_subscribers)) {
 		free(SYS_SLIST_CONTAINER(node, subs, node));
 	}
-	free(des);
 
 	return 0;
 }
@@ -219,8 +250,4 @@ int bsp_log_unsubscribe(struct bsp_log_des *des, bsp_log_function_t fn)
 	free(subs);
 
 	return 0;
-}
-
-void bsp_log_printf(struct bsp_log_des *des, enum bsp_log_lvl level, const char *fmt, ...)
-{
 }

@@ -12,7 +12,7 @@ enum bsp_log_lvl {
 	BSP_LOG_LVL_NUM,
 };
 
-typedef void (*bsp_log_msg_fn)(enum bsp_log_lvl level, char *str_level, char *msg);
+typedef void (*bsp_log_msg_fn)(struct bsp_log_des *des);
 struct bsp_log_subs {
 	sys_snode_t node;
 	bsp_log_msg_fn message;
@@ -27,19 +27,16 @@ struct bsp_log_subs {
 struct bsp_log_des {
 	size_t buf_size;
 	uint64_t (*get_timestamp)(void);
-	void (*log)(struct bsp_log_des *des, enum bsp_log_lvl level, const char *fmt, ...);
-	void (*trace)(struct bsp_log_des *des, const char *fmt, ...);
-	void (*debug)(struct bsp_log_des *des, const char *fmt, ...);
-	void (*info)(struct bsp_log_des *des, const char *fmt, ...);
-	void (*warning)(struct bsp_log_des *des, const char *fmt, ...);
-	void (*error)(struct bsp_log_des *des, const char *fmt, ...);
-	void (*critical)(struct bsp_log_des *des, const char *fmt, ...);
-	void (*always)(struct bsp_log_des *des, const char *fmt, ...);
+	int _str_len;
+	enum bsp_log_lvl _level;
+	const char *_level_name;
+	const char *_color;
 	sys_slist_t _subscribers;
 	char *_buf;
+	char *_buf2;
+	uint64_t _time_stamp;
 };
 
 extern struct bsp_module bsp_log_mod;
-
 
 #endif
