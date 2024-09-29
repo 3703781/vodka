@@ -164,6 +164,7 @@ void bsp_init(void)
 	printf("%llu\n", bsp_debug_tsg_get());
 	bsp_module_append(&bsp_tty_mod);
 	bsp_module_append(&bsp_lcd_mod);
+	bsp_module_append(&bsp_log_mod);
 	printf("%llu\n", bsp_debug_tsg_get());
 	bsp_module_prepare_all();
 	bsp_module_setup_all();

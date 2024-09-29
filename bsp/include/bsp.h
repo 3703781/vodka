@@ -9,6 +9,7 @@
 #include <bsp_debug.h>
 #include <bsp_lcd.h>
 #include <bsp_tty.h>
+#include <bsp_log.h>
 
 void bsp_init(void);
 
