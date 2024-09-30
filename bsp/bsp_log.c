@@ -1,9 +1,4 @@
 #include <bsp.h>
-#include <bsp_log.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdarg.h>
-#include <errno.h>
 
 enum bsp_log_color {
 	BSP_LOG_COLOR_NRM = 0,
@@ -21,11 +16,12 @@ static const char *lvl_name[BSP_LOG_LVL_NUM] = { "TRACE", "DEBUG", "INFO", "WARN
 static const enum bsp_log_color lvl_color[BSP_LOG_LVL_NUM] = { BSP_LOG_COLOR_NRM, BSP_LOG_COLOR_NRM, BSP_LOG_COLOR_NRM,
 							       BSP_LOG_COLOR_YEL, BSP_LOG_COLOR_MAG, BSP_LOG_COLOR_RED,
 							       BSP_LOG_COLOR_CYN };
-static const char *color_str[BSP_LOG_COLOR_NUM] = { "\x1B[0m",	"\x1B[31m", "\x1B[32m", "\x1B[33m",
-						    "\x1B[34m", "\x1B[35m", "\x1B[36m", "\x1B[37m" };
+static const char *color_str[BSP_LOG_COLOR_NUM] = { "\e[0m",  "\e[31m", "\e[32m", "\e[33m",
+						    "\e[34m", "\e[35m", "\e[36m", "\e[37m" };
 
 int bsp_log_init(void *des);
 int bsp_log_uninit(void *des);
+static void *set_default_des(void *des);
 
 struct bsp_module bsp_log_mod = { .name = "LOG",
 				  .state = BSP_MODULE_STATE_COMING,
@@ -34,16 +30,7 @@ struct bsp_module bsp_log_mod = { .name = "LOG",
 				  .desetup = bsp_log_uninit,
 				  .descriptor = NULL,
 				  .version = "0.1" };
-
-static inline void log(struct bsp_log_des *des, enum bsp_log_lvl level, const char *fmt, ...);
-static inline void trace(struct bsp_log_des *des, const char *fmt, ...);
-static inline void debug(struct bsp_log_des *des, const char *fmt, ...);
-static inline void info(struct bsp_log_des *des, const char *fmt, ...);
-static inline void warning(struct bsp_log_des *des, const char *fmt, ...);
-static inline void error(struct bsp_log_des *des, const char *fmt, ...);
-static inline void critical(struct bsp_log_des *des, const char *fmt, ...);
-static inline void always(struct bsp_log_des *des, const char *fmt, ...);
-
+BSP_MODULE_DECLARE(bsp_log_mod);
 /**
  * @brief Initialize uninitialized members in the log descriptor with default values.
  * 
@@ -61,15 +48,21 @@ static void *set_default_des(void *des)
 	}
 
 	/* set to default value */
-	SET_VAL_IF_ZERO(int_des->buf_size, 4096);
-	SET_VAL_IF_NULL(int_des->_buf, calloc(int_des->buf_size, 1));
-	if (IS_ERR_OR_NULL(int_des->_buf))
+	SET_VAL_IF_ZERO(int_des->msg_size, 4096);
+	SET_VAL_IF_ZERO(int_des->prefix_size, 128);
+	SET_VAL_IF_ZERO(int_des->_flag, 0);
+	SET_VAL_IF_NULL(int_des->_msg, calloc(int_des->msg_size, 1));
+	if (IS_ERR_OR_NULL(int_des->_msg))
 		return ERR_PTR(-ENOMEM);
-	SET_VAL_IF_NULL(int_des->_buf2, calloc(int_des->buf_size, 1));
-	if (IS_ERR_OR_NULL(int_des->_buf))
+	SET_VAL_IF_NULL(int_des->_prefix_cl, calloc(int_des->prefix_size, 1));
+	if (IS_ERR_OR_NULL(int_des->_prefix_cl))
 		return ERR_PTR(-ENOMEM);
-	sys_slist_init(int_des->_subscribers);
-	SET_VAL_IF_NULL(int_des->_get_timestamp, bsp_debug_tsg_get);
+	SET_VAL_IF_NULL(int_des->_prefix_bw, calloc(int_des->prefix_size, 1));
+	if (IS_ERR_OR_NULL(int_des->_prefix_bw))
+		return ERR_PTR(-ENOMEM);
+	sys_slist_init(&int_des->_subscribers);
+	SET_VAL_IF_NULL(int_des->get_timestamp, bsp_debug_tsg_get_ms);
+	SET_VAL_IF_NULL(int_des->_color, color_str[(size_t)BSP_LOG_COLOR_NRM]);
 
 	return int_des;
 }
@@ -77,17 +70,30 @@ static void *set_default_des(void *des)
 static void vlog(struct bsp_log_des *des, const char *fmt, va_list arg)
 {
 	struct bsp_log_subs *subs = NULL;
+	const char * const mod_name = des->owner == NULL ? "": des->owner->name;
 	des->_level_name = lvl_name[(size_t)des->_level];
 	des->_time_stamp = des->get_timestamp();
 	des->_color = color_str[(size_t)lvl_color[(size_t)des->_level]];
 
-	des->_str_len = vsnprintf(des->_buf, des->buf_size, fmt, arg);
-	if (des->_str_len <= 0)
+	des->_msg_strlen = vsnprintf(des->_msg, des->msg_size, fmt, arg);
+	if (des->_msg_strlen <= 0)
 		return;
+	if (BSP_LOG_FLAG_NEED_CL(des)) {
+		des->_prefix_cl_strlen = snprintf(des->_prefix_cl, des->prefix_size,
+						  "\e[32m[%f] \e[33m%s\e[0m %s%s\e[0m: ", des->_time_stamp, mod_name,
+						  des->_color, des->_level_name);
+		if (des->_prefix_cl_strlen <= 0)
+			return;
+	} else if (BSP_LOG_FLAG_NEED_BW(des)) {
+		des->_prefix_bw_strlen = snprintf(des->_prefix_bw, des->prefix_size, "[%f] %s %s: ", des->_time_stamp,
+						  mod_name, des->_level_name);
+		if (des->_prefix_bw_strlen <= 0)
+			return;
+	}
 
 	SYS_SLIST_FOR_EACH_CONTAINER(&des->_subscribers, subs, node) {
 		if (des->_level >= subs->threshold)
-			subs->message(des);
+			subs->message(des, subs);
 	}
 }
 
@@ -163,26 +169,32 @@ void bsp_log_always(struct bsp_log_des *des, const char *fmt, ...)
 	va_end(ap);
 }
 
-static void tty1(struct bsp_log_des *des)
+static void tty1(struct bsp_log_des *des, struct bsp_log_subs *subs)
 {
 	static struct bsp_module *mod = NULL;
-	const char *const level_name = (size_t)des->_level_name;
 	if (mod == NULL)
 		mod = bsp_module_find("TTY1");
 
 	if (mod && mod->state == BSP_MODULE_STATE_LIVE) {
-		struct bsp_tty_des *des = (struct bsp_tty_des *)mod->descriptor;
-		vsnprintf(des->_buf2, des->buf_size,
-			  "[%f] %s %s %s:", );
-		des->ops.write(des, msg, strlen(msg));
-		des->ops.write(des, msg, strlen(msg));
+		struct bsp_tty_des *tty = (struct bsp_tty_des *)mod->descriptor;
+		if (subs->support_color)
+			tty->ops.write(tty, des->_prefix_cl, des->_prefix_cl_strlen);
+		else
+			tty->ops.write(tty, des->_prefix_bw, des->_prefix_bw_strlen);
+
+		tty->ops.write(tty, des->_msg, des->_msg_strlen);
 	}
 }
 
-static void itm_ch1(struct bsp_log_des *des)
+static void itm_ch1(struct bsp_log_des *des, struct bsp_log_subs *subs)
 {
-	for (size_t i = 0; i < count; i++) {
-		ITM_SendChar(msg[i], 1);
+	const char *const prefix = subs->support_color ? des->_prefix_cl : des->_prefix_bw;
+	int str_len = subs->support_color ? des->_prefix_cl_strlen : des->_prefix_bw_strlen;
+	for (size_t i = 0; i < str_len; i++) {
+		ITM_SendChar(prefix[i], 1);
+	}
+	for (size_t i = 0; i < des->_msg_strlen; i++) {
+		ITM_SendChar(des->_msg[i], 1);
 	}
 }
 
@@ -191,9 +203,9 @@ int bsp_log_init(void *des)
 	struct bsp_log_des *int_des = (struct bsp_log_des *)des;
 	if (int_des == NULL)
 		return -ENXIO;
-	if (bsp_log_subscribe(int_des, tty1, BSP_LOG_LVL_INFO))
+	if (bsp_log_subscribe(int_des, tty1, BSP_LOG_LVL_INFO, 1))
 		return -EIO;
-	if (bsp_log_subscribe(int_des, itm_ch1, BSP_LOG_LVL_INFO))
+	if (bsp_log_subscribe(int_des, itm_ch1, BSP_LOG_LVL_INFO, 0))
 		return -EIO;
 
 	return 0;
@@ -207,13 +219,15 @@ int bsp_log_init(void *des)
 int bsp_log_uninit(void *des)
 {
 	struct bsp_log_des *int_des = (struct bsp_log_des *)des;
-	free(int_des->_buf);
-	int_des->_buf = NULL;
-	free(int_des->_buf2);
-	int_des->_buf2 = NULL;
+	free(int_des->_msg);
+	int_des->_msg = NULL;
+	free(int_des->_prefix_bw);
+	int_des->_prefix_bw = NULL;
+	free(int_des->_prefix_cl);
+	int_des->_prefix_cl = NULL;
 	sys_snode_t *node;
 	struct bsp_log_subs *subs;
-	while (node = sys_slist_get(&int_des->_subscribers)) {
+	while ((node = sys_slist_get(&int_des->_subscribers)) != NULL) {
 		free(SYS_SLIST_CONTAINER(node, subs, node));
 	}
 
@@ -222,13 +236,21 @@ int bsp_log_uninit(void *des)
 
 /**
  * @brief Search the subscribers table to install or update fn
+ * 
  */
-int bsp_log_subscribe(struct bsp_log_des *des, bsp_log_msg_fn fn, enum bsp_log_lvl threshold)
+int bsp_log_subscribe(struct bsp_log_des *des, bsp_log_msg_fn fn, enum bsp_log_lvl threshold, uint8_t support_color)
 {
 	struct bsp_log_subs *subscriber = malloc(sizeof(struct bsp_log_subs));
-	subscriber->write = fn;
+	if (subscriber == NULL)
+		return -ENOMEM;
+	subscriber->message = fn;
 	subscriber->threshold = threshold;
+	subscriber->support_color = support_color;
 	sys_slist_append(&des->_subscribers, &subscriber->node);
+	if (support_color)
+		BSP_LOG_FLAG_SET_CL(des);
+	else
+		BSP_LOG_FLAG_SET_BW(des);
 
 	return 0;
 }
@@ -236,17 +258,16 @@ int bsp_log_subscribe(struct bsp_log_des *des, bsp_log_msg_fn fn, enum bsp_log_l
 /**
  * @brief search the subscribers table to remove
  */
-int bsp_log_unsubscribe(struct bsp_log_des *des, bsp_log_function_t fn)
+int bsp_log_unsubscribe(struct bsp_log_des *des, bsp_log_msg_fn fn)
 {
-	int i;
 	struct bsp_log_subs *subs = NULL;
 	SYS_SLIST_FOR_EACH_CONTAINER(&des->_subscribers, subs, node) {
-		if (subs->write == fn)
+		if (subs->message == fn)
 			break;
 	}
 	if (subs == NULL)
 		return -ENOENT;
-	sys_slist_find_and_remove(&des->_subscribers, subs);
+	sys_slist_find_and_remove(&des->_subscribers, &subs->node);
 	free(subs);
 
 	return 0;

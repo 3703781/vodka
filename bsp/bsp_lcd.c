@@ -1,8 +1,4 @@
-#include <bsp_utils.h>
-#include <bsp_lcd.h>
-#include <bsp_module.h>
-#include <stdlib.h>
-#include <string.h>
+#include <bsp.h>
 
 static int bsp_lcd_init(void *des);
 static void *set_default_des(void *des);
@@ -13,6 +9,7 @@ struct bsp_module bsp_lcd_mod = { .name = "LCD",
 				  .setup = bsp_lcd_init,
 				  .descriptor = NULL,
 				  .version = "0.1" };
+BSP_MODULE_DECLARE(bsp_lcd_mod);
 
 /**
  * @brief Set the brightness of the backlight
@@ -189,6 +186,8 @@ static inline int init_ltdc(LTDC_InitTypeDef *init)
 	struct bsp_lcd_des *des =
 		CONTAINER_OF(CONTAINER_OF(init, LTDC_HandleTypeDef, Init), struct bsp_lcd_des, _hltdc);
 	struct bsp_lcd_dev *dev = &des->dev;
+	BSP_LOG_DECLARE();
+	BSP_LOG_TRC("");
 
 	des->_hltdc.Instance = LTDC;
 

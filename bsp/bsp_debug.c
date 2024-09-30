@@ -196,7 +196,7 @@ int bsp_debug_tsg_stop()
 
 /**
  * @brief Get the 64-bit timestamp from TSG
- *        The TSG starts counting from a specified value when bsp_utils_start_trce_ts(value)
+ *        The TSG starts counting from a specified value when bsp_debug_tsg_start(value)
  * @return The 64-bit timestamp
  * @warning This function will NOT check whether TSG exists
  */
@@ -207,6 +207,18 @@ __attribute__((naked)) uint64_t bsp_debug_tsg_get()
 		       "ldrd r0, r1, [r4]\n"
 		       "pop {r4}\n"
 		       "bx lr\n");
+}
+
+/**
+ * @brief Get the 64-bit timestamp from TSG, and convert it to the seconds
+ *        The TSG starts counting from a specified value when bsp_debug_tsg_start(value)
+ * @return If success, the seconds that the timstamp indicates; on failure, a negtive value
+ */
+float bsp_debug_tsg_get_ms()
+{
+	if (!tsg)
+		return -1.0f;
+	return (float)bsp_debug_tsg_get() / tsg->cntfid0;
 }
 
 #undef ROM_TB1_ENT_PRESENT

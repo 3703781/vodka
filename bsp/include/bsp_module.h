@@ -3,7 +3,9 @@
 
 #include <bsp_utils.h>
 
-#define BSP_MODULE_NAME_LEN 64
+#define BSP_MODULE_NAME_LEN	64
+#define BSP_MODULE_THIS		(__this_module)
+#define BSP_MODULE_DECLARE(mod) __maybe_unused static struct bsp_module *const __this_module = &(mod)
 
 enum bsp_module_state {
 	BSP_MODULE_STATE_LIVE,

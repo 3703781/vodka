@@ -2,14 +2,23 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+struct bsp_module mod = { .name = "MAIN", .version = "0.1" };
+BSP_MODULE_DECLARE(mod);
 /**
  * @brief  The application entry point.
  * @retval int
  */
 int main(void)
 {
+	BSP_LOG_DECLARE();
 	while (1) {
-		printf("%llu, ", bsp_debug_tsg_get());
+		BSP_LOG_TRC("%d\r\n", rand());
+		BSP_LOG_DBG("%d\r\n", rand());
+		BSP_LOG_INF("%d\r\n", rand());
+		BSP_LOG_WRN("%d\r\n", rand());
+		BSP_LOG_ERR("%d\r\n", rand());
+		BSP_LOG_CRT("%d\r\n", rand());
+		BSP_LOG_ALW("%d\r\n", rand());
 		HAL_Delay(rand() % 2);
 		// fflush(0);
 	}

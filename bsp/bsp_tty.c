@@ -16,6 +16,7 @@ struct bsp_module bsp_tty_mod = { .name = "TTY1",
 				  .setup = bsp_tty_init,
 				  .descriptor = NULL,
 				  .version = "0.1" };
+BSP_MODULE_DECLARE(bsp_tty_mod);
 
 static USART_TypeDef *uart_tb[8] = { USART1, USART2, USART3, UART4, UART5, USART6, UART7, UART8 };
 

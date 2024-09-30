@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <zephyr/sys/util.h>
 #include <zephyr/sys/slist.h>
 #include <stm32h7xx.h>
