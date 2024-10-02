@@ -1,7 +1,7 @@
 ENTRY(Reset_Handler)
 HEAP_SIZE = 0x1000000; /* 8MB */
 GRAM_SIZE = 0x600000; /* 6MB */
-TTY_SIZE = 0x1000;  /* 4KB must be powers of 2*/
+TTY_SIZE = 0x10000;  /* 64KB must be powers of 2*/
 _estack = ORIGIN(int_dtcm) + LENGTH(int_dtcm);
 _sext_sdram = ORIGIN(ext_sdram);
 _eext_sdram = _sext_sdram + LENGTH(ext_sdram);

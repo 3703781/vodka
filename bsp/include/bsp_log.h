@@ -5,13 +5,47 @@
 	struct bsp_module *__log_mod = bsp_module_find("LOG");                       \
 	struct bsp_log_des *__log_des = (struct bsp_log_des *)__log_mod->descriptor; \
 	__log_des->owner = BSP_MODULE_THIS;
-#define BSP_LOG_TRC(fmt, ...) bsp_log_trace(__log_des, "%s" fmt, __func__, ##__VA_ARGS__)
-#define BSP_LOG_DBG(fmt, ...) bsp_log_debug(__log_des, "%s" fmt, __func__, ##__VA_ARGS__)
-#define BSP_LOG_INF(fmt, ...) bsp_log_info(__log_des, "%s" fmt, __func__, ##__VA_ARGS__)
-#define BSP_LOG_WRN(fmt, ...) bsp_log_warning(__log_des, "%s" fmt, __func__, ##__VA_ARGS__)
-#define BSP_LOG_ERR(fmt, ...) bsp_log_error(__log_des, "%s" fmt, __func__, ##__VA_ARGS__)
-#define BSP_LOG_CRT(fmt, ...) bsp_log_critical(__log_des, "%s" fmt, __func__, ##__VA_ARGS__)
-#define BSP_LOG_ALW(fmt, ...) bsp_log_always(__log_des, "%s" fmt, __func__, ##__VA_ARGS__)
+#define BSP_LOG_TRC(fmt, ...)                                                \
+	__log_des->_level = BSP_LOG_LVL_TRACE;                               \
+	__log_des->_prefix_func = (char *)__func__;                          \
+	__log_des->_prefix_file_line = __FILE__ ":" STRINGIFY(__LINE__); \
+	bsp_log(__log_des, fmt "\r\n", ##__VA_ARGS__)
+
+#define BSP_LOG_DBG(fmt, ...)                                                \
+	__log_des->_level = BSP_LOG_LVL_DEBUG;                               \
+	__log_des->_prefix_func = (char *)__func__;                          \
+	__log_des->_prefix_file_line = __FILE__ ":" STRINGIFY(__LINE__); \
+	bsp_log(__log_des, fmt "\r\n", ##__VA_ARGS__)
+
+#define BSP_LOG_INF(fmt, ...)                                                \
+	__log_des->_level = BSP_LOG_LVL_INFO;                                \
+	__log_des->_prefix_func = (char *)__func__;                          \
+	__log_des->_prefix_file_line = __FILE__ ":" STRINGIFY(__LINE__); \
+	bsp_log(__log_des, fmt "\r\n", ##__VA_ARGS__)
+
+#define BSP_LOG_WRN(fmt, ...)                                                \
+	__log_des->_level = BSP_LOG_LVL_WARNING;                             \
+	__log_des->_prefix_func = (char *)__func__;                          \
+	__log_des->_prefix_file_line = __FILE__ ":" STRINGIFY(__LINE__); \
+	bsp_log(__log_des, fmt "\r\n", ##__VA_ARGS__)
+
+#define BSP_LOG_ERR(fmt, ...)                                                \
+	__log_des->_level = BSP_LOG_LVL_ERROR;                               \
+	__log_des->_prefix_func = (char *)__func__;                          \
+	__log_des->_prefix_file_line = __FILE__ ":" STRINGIFY(__LINE__); \
+	bsp_log(__log_des, fmt "\r\n", ##__VA_ARGS__)
+
+#define BSP_LOG_CRT(fmt, ...)                                                \
+	__log_des->_level = BSP_LOG_LVL_CRITICAL;                            \
+	__log_des->_prefix_func = (char *)__func__;                          \
+	__log_des->_prefix_file_line = __FILE__ ":" STRINGIFY(__LINE__); \
+	bsp_log(__log_des, fmt "\r\n", ##__VA_ARGS__)
+
+#define BSP_LOG_ALW(fmt, ...)                                                \
+	__log_des->_level = BSP_LOG_LVL_ALWAYS;                              \
+	__log_des->_prefix_func = (char *)__func__;                          \
+	__log_des->_prefix_file_line = __FILE__ ":" STRINGIFY(__LINE__); \
+	bsp_log(__log_des, fmt "\r\n", ##__VA_ARGS__)
 
 enum bsp_log_lvl {
 	BSP_LOG_LVL_TRACE = 0,
@@ -47,6 +81,8 @@ struct bsp_log_des {
 	struct bsp_module *owner;
 
 	char *_msg; //!< the current log message
+	char *_prefix_file_line;
+	char *_prefix_func;
 	char *_prefix_cl; //!< to store the prefix of the current log message in the form of "\e[32m[0.000775]\e[0m \e[33mmodule\e[0m \e[33mWARNING\e[0m: "
 	char *_prefix_bw; //!< to store a prefix of the current log message in the form of "[0.000775] module WARNING: "
 
@@ -124,13 +160,6 @@ extern struct bsp_module bsp_log_mod;
 
 int bsp_log_subscribe(struct bsp_log_des *des, bsp_log_msg_fn fn, enum bsp_log_lvl threshold, uint8_t support_color);
 int bsp_log_unsubscribe(struct bsp_log_des *des, bsp_log_msg_fn fn);
-void bsp_log_log(struct bsp_log_des *des, enum bsp_log_lvl level, const char *fmt, ...);
-void bsp_log_trace(struct bsp_log_des *des, const char *fmt, ...);
-void bsp_log_debug(struct bsp_log_des *des, const char *fmt, ...);
-void bsp_log_info(struct bsp_log_des *des, const char *fmt, ...);
-void bsp_log_warning(struct bsp_log_des *des, const char *fmt, ...);
-void bsp_log_error(struct bsp_log_des *des, const char *fmt, ...);
-void bsp_log_critical(struct bsp_log_des *des, const char *fmt, ...);
-void bsp_log_always(struct bsp_log_des *des, const char *fmt, ...);
+void bsp_log(struct bsp_log_des *des, const char *fmt, ...);
 
 #endif

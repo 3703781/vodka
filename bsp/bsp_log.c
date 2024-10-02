@@ -67,26 +67,33 @@ static void *set_default_des(void *des)
 	return int_des;
 }
 
-static void vlog(struct bsp_log_des *des, const char *fmt, va_list arg)
+void bsp_log(struct bsp_log_des *des, const char *fmt, ...)
 {
+	va_list ap;
 	struct bsp_log_subs *subs = NULL;
-	const char * const mod_name = des->owner == NULL ? "": des->owner->name;
+	const char *const mod_name = des->owner == NULL ? "" : des->owner->name;
 	des->_level_name = lvl_name[(size_t)des->_level];
 	des->_time_stamp = des->get_timestamp();
 	des->_color = color_str[(size_t)lvl_color[(size_t)des->_level]];
 
-	des->_msg_strlen = vsnprintf(des->_msg, des->msg_size, fmt, arg);
+	va_start(ap, fmt);
+	des->_msg_strlen = vsnprintf(des->_msg, des->msg_size, fmt, ap);
+	va_end(ap);
+
 	if (des->_msg_strlen <= 0)
 		return;
 	if (BSP_LOG_FLAG_NEED_CL(des)) {
 		des->_prefix_cl_strlen = snprintf(des->_prefix_cl, des->prefix_size,
-						  "\e[32m[%f] \e[33m%s\e[0m %s%s\e[0m: ", des->_time_stamp, mod_name,
-						  des->_color, des->_level_name);
+						  "\e[32m[%f] \e[33m%s %s%s \e[34m%s %s\e[0m: ", des->_time_stamp,
+						  mod_name, des->_color, des->_level_name, des->_prefix_file_line,
+						  des->_prefix_func);
 		if (des->_prefix_cl_strlen <= 0)
 			return;
-	} else if (BSP_LOG_FLAG_NEED_BW(des)) {
-		des->_prefix_bw_strlen = snprintf(des->_prefix_bw, des->prefix_size, "[%f] %s %s: ", des->_time_stamp,
-						  mod_name, des->_level_name);
+	}
+	if (BSP_LOG_FLAG_NEED_BW(des)) {
+		des->_prefix_bw_strlen = snprintf(des->_prefix_bw, des->prefix_size,
+						  "[%f] %s %s %s %s: ", des->_time_stamp, mod_name, des->_level_name,
+						  des->_prefix_file_line, des->_prefix_func);
 		if (des->_prefix_bw_strlen <= 0)
 			return;
 	}
@@ -95,78 +102,6 @@ static void vlog(struct bsp_log_des *des, const char *fmt, va_list arg)
 		if (des->_level >= subs->threshold)
 			subs->message(des, subs);
 	}
-}
-
-void bsp_log_log(struct bsp_log_des *des, enum bsp_log_lvl level, const char *fmt, ...)
-{
-	va_list ap;
-	des->_level = level;
-	va_start(ap, fmt);
-	vlog(des, fmt, ap);
-	va_end(ap);
-}
-
-void bsp_log_trace(struct bsp_log_des *des, const char *fmt, ...)
-{
-	va_list ap;
-	va_start(ap, fmt);
-	des->_level = BSP_LOG_LVL_TRACE;
-	vlog(des, fmt, ap);
-	va_end(ap);
-}
-
-void bsp_log_debug(struct bsp_log_des *des, const char *fmt, ...)
-{
-	va_list ap;
-	va_start(ap, fmt);
-	des->_level = BSP_LOG_LVL_DEBUG;
-	vlog(des, fmt, ap);
-	va_end(ap);
-}
-
-void bsp_log_info(struct bsp_log_des *des, const char *fmt, ...)
-{
-	va_list ap;
-	va_start(ap, fmt);
-	des->_level = BSP_LOG_LVL_INFO;
-	vlog(des, fmt, ap);
-	va_end(ap);
-}
-
-void bsp_log_warning(struct bsp_log_des *des, const char *fmt, ...)
-{
-	va_list ap;
-	va_start(ap, fmt);
-	des->_level = BSP_LOG_LVL_WARNING;
-	vlog(des, fmt, ap);
-	va_end(ap);
-}
-
-void bsp_log_error(struct bsp_log_des *des, const char *fmt, ...)
-{
-	va_list ap;
-	va_start(ap, fmt);
-	des->_level = BSP_LOG_LVL_ERROR;
-	vlog(des, fmt, ap);
-	va_end(ap);
-}
-
-void bsp_log_critical(struct bsp_log_des *des, const char *fmt, ...)
-{
-	va_list ap;
-	va_start(ap, fmt);
-	des->_level = BSP_LOG_LVL_CRITICAL;
-	vlog(des, fmt, ap);
-	va_end(ap);
-}
-
-void bsp_log_always(struct bsp_log_des *des, const char *fmt, ...)
-{
-	va_list ap;
-	va_start(ap, fmt);
-	des->_level = BSP_LOG_LVL_ALWAYS;
-	vlog(des, fmt, ap);
-	va_end(ap);
 }
 
 static void tty1(struct bsp_log_des *des, struct bsp_log_subs *subs)
@@ -203,9 +138,9 @@ int bsp_log_init(void *des)
 	struct bsp_log_des *int_des = (struct bsp_log_des *)des;
 	if (int_des == NULL)
 		return -ENXIO;
-	if (bsp_log_subscribe(int_des, tty1, BSP_LOG_LVL_INFO, 1))
+	if (bsp_log_subscribe(int_des, tty1, BSP_LOG_LVL_DEBUG, 1))
 		return -EIO;
-	if (bsp_log_subscribe(int_des, itm_ch1, BSP_LOG_LVL_INFO, 0))
+	if (bsp_log_subscribe(int_des, itm_ch1, BSP_LOG_LVL_TRACE, 1))
 		return -EIO;
 
 	return 0;

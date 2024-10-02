@@ -1,6 +1,4 @@
-#include <bsp_utils.h>
-#include <bsp_module.h>
-#include <bsp_tty.h>
+#include <bsp.h>
 
 static void *set_default_des(void *des);
 static int bsp_tty_init(void *des);
@@ -407,19 +405,18 @@ static uint8_t *get_real_tx_rd_ptr(struct bsp_tty_des *des)
 	return real_ptr;
 }
 
-#define BSP_TTY_INC_PTR(ptr, num)                 \
-	do {                                      \
-		ptr += num;                       \
-		if (ptr >= &_etty_int_sram_d1)    \
-			ptr = &_stty_int_sram_d1; \
-	} while (0)
+#define BSP_TTY_INC_PTR(ptr, num)              \
+	({                                     \
+		ptr += num;                    \
+		if (ptr >= &_etty_int_sram_d1) \
+			ptr -= (ssize_t)&TTY_SIZE;      \
+		ptr;                           \
+	})
 
 static size_t write(struct bsp_tty_des *des, const char *buf, size_t count)
 {
 	IRQn_Type dma_irq;
 	DMA_Stream_TypeDef *dma = (DMA_Stream_TypeDef *)des->dma_tx;
-	uint8_t *tx_rd_ptr;
-	ssize_t new_count = count;
 
 	if (get_dma_irq(des, 1, &dma_irq, 0))
 		return 0;
@@ -435,21 +432,7 @@ static size_t write(struct bsp_tty_des *des, const char *buf, size_t count)
 	while (READ_BIT(dma->CR, DMA_SxCR_EN));
 	NVIC_ClearPendingIRQ(dma_irq);
 
-	// We assumed that all the data will be sent. However, there is chance that not all
-	// the bytes are sent. So get the read point to the next byte of the position
-	// that dma had just read from.
-	tx_rd_ptr = get_real_tx_rd_ptr(des);
-	if (IS_ERR(tx_rd_ptr))
-		return 0;	
-
-	// if ring buffer overflow, wait
-	if (des->_tx_wr_total_bytes + count - des->_tx_rd_total_bytes > (uint32_t)&TTY_SIZE) {
-		new_count = tx_rd_ptr - des->_tx_wr_ptr;
-		if (new_count < 0)
-			new_count += (ssize_t)&TTY_SIZE;
-	}
-	des->_tx_wr_total_bytes += new_count;
-	count = new_count;
+	des->_tx_wr_total_bytes += count;
 	while (count--) {
 		*des->_tx_wr_ptr = *buf++;
 		BSP_TTY_INC_PTR(des->_tx_wr_ptr, 1);
@@ -458,7 +441,7 @@ static size_t write(struct bsp_tty_des *des, const char *buf, size_t count)
 	start_tx(&des->_hdma_uart_tx);
 
 	// Enable the DMA transfer for transmit request by setting the DMAT bit in the UART CR3 register
-	return new_count;
+	return count;
 }
 
 typedef struct {

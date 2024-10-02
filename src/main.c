@@ -12,14 +12,13 @@ int main(void)
 {
 	BSP_LOG_DECLARE();
 	while (1) {
-		BSP_LOG_TRC("%d\r\n", rand());
-		BSP_LOG_DBG("%d\r\n", rand());
-		BSP_LOG_INF("%d\r\n", rand());
-		BSP_LOG_WRN("%d\r\n", rand());
-		BSP_LOG_ERR("%d\r\n", rand());
-		BSP_LOG_CRT("%d\r\n", rand());
-		BSP_LOG_ALW("%d\r\n", rand());
-		HAL_Delay(rand() % 2);
+		BSP_LOG_TRC("rand() = %d", rand());
+		BSP_LOG_DBG("rand() = %d", rand());
+		BSP_LOG_INF("rand() = %d", rand());
+		BSP_LOG_WRN("rand() = %d", rand());
+		BSP_LOG_ERR("rand() = %d", rand());
+		BSP_LOG_CRT("rand() = %d", rand());
+		HAL_Delay(rand() % 100);
 		// fflush(0);
 	}
 

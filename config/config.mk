@@ -25,9 +25,10 @@ PR := $(CC) -E
 OBJDUMP := $(PREFIX)objdump
 READELF := $(PREFIX)readelf
 
-DEFINES := \
+MACROS := \
 -DUSE_HAL_DRIVER \
--DSTM32H743xx
+-DSTM32H743xx \
+-fmacro-prefix-map=$(this_dir)=
 
 INCS := \
 -I$(ABSPROJDIR)cmsis/include \
@@ -76,7 +77,7 @@ CFLAGS := \
 -c \
 -std=gnu17 \
 $(ARCHS) \
-$(DEFINES) \
+$(MACROS) \
 $(INCS) \
 $(SYSROOT) \
 $(DEBUGS) \
@@ -95,12 +96,10 @@ $(WARNS) \
 -T$(LDFILE) \
 -Wl,--cref
 
-# -Wl,--cref
-
 ASFLAGS := \
 -c \
 $(ARCHS) \
-$(DEFINES) \
+$(MACROS) \
 -D_ASMLANGUAGE \
 $(INCS) \
 $(SYSROOT) \
