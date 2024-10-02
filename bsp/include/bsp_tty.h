@@ -26,13 +26,13 @@ struct bsp_tty_des {
 	DMA_Stream_TypeDef *dma_tx;
 	DMA_Stream_TypeDef *dma_rx;
 	struct bsp_tty_ops ops;
+	size_t _txrb_size;
+	char *_txrb;
 	UART_HandleTypeDef _huart;
 	DMA_HandleTypeDef _hdma_uart_tx;
 	DMA_HandleTypeDef _hdma_uart_rx;
-	uint8_t *_tx_rd_ptr;
-	uint8_t *_tx_wr_ptr;
-	uint64_t _tx_rd_total_bytes;
-	uint64_t _tx_wr_total_bytes;
+	uint32_t _txrb_out;
+	uint32_t _txrb_in;
 };
 
 extern struct bsp_module bsp_tty_mod;

@@ -184,6 +184,10 @@ static void *set_default_des(void *des)
 	/* set to default value */
 	SET_VAL_IF_NULL(int_des->uart, USART1);
 	SET_VAL_IF_ZERO(int_des->baud, 115200);
+	SET_VAL_IF_ZERO(int_des->_txrb_size, roundup_pow_of_two(256 * 1024)); // 256KiB
+	SET_VAL_IF_NULL(int_des->_txrb, calloc(int_des->_txrb_size, 1));
+	if (IS_ERR_OR_NULL(int_des->_txrb))
+		return ERR_PTR(-ENOMEM);
 	SET_VAL_IF_ZERO(int_des->uart_pin_tx, GPIO_PIN_6);
 	SET_VAL_IF_NULL(int_des->uart_port_tx, GPIOB);
 	SET_VAL_IF_ZERO(int_des->uart_pin_rx, GPIO_PIN_7);
@@ -192,10 +196,6 @@ static void *set_default_des(void *des)
 	SET_VAL_IF_NULL(int_des->dma_rx, DMA1_Stream1);
 	SET_VAL_IF_NULL(int_des->ops.write, write);
 	SET_VAL_IF_NULL(int_des->ops.read, read);
-	SET_VAL_IF_NULL(int_des->_tx_rd_ptr, (uint8_t *)&_stty_int_sram_d1);
-	SET_VAL_IF_NULL(int_des->_tx_wr_ptr, (uint8_t *)&_stty_int_sram_d1);
-	SET_VAL_IF_NOT_ZERO(int_des->_tx_rd_total_bytes, 0);
-	SET_VAL_IF_NOT_ZERO(int_des->_tx_wr_total_bytes, 0);
 
 	return int_des;
 }
@@ -390,33 +390,11 @@ static int bsp_tty_init(void *des)
 	return 0;
 }
 
-static uint8_t *get_real_tx_rd_ptr(struct bsp_tty_des *des)
-{
-	DMA_Stream_TypeDef *dma = (DMA_Stream_TypeDef *)des->dma_tx;
-	uint8_t *real_ptr = NULL;
-
-	if (READ_BIT(dma->CR, DMA_SxCR_EN))
-		return ERR_PTR(-EBUSY);
-
-	real_ptr = des->_tx_rd_ptr - dma->NDTR;
-	des->_tx_rd_total_bytes -= dma->NDTR;
-	if (real_ptr < &_stty_int_sram_d1)
-		real_ptr += (uint32_t)&TTY_SIZE;
-	return real_ptr;
-}
-
-#define BSP_TTY_INC_PTR(ptr, num)              \
-	({                                     \
-		ptr += num;                    \
-		if (ptr >= &_etty_int_sram_d1) \
-			ptr -= (ssize_t)&TTY_SIZE;      \
-		ptr;                           \
-	})
-
-static size_t write(struct bsp_tty_des *des, const char *buf, size_t count)
+static size_t write(struct bsp_tty_des *des, const char *buf, size_t len)
 {
 	IRQn_Type dma_irq;
 	DMA_Stream_TypeDef *dma = (DMA_Stream_TypeDef *)des->dma_tx;
+	uint32_t l, in;
 
 	if (get_dma_irq(des, 1, &dma_irq, 0))
 		return 0;
@@ -432,16 +410,24 @@ static size_t write(struct bsp_tty_des *des, const char *buf, size_t count)
 	while (READ_BIT(dma->CR, DMA_SxCR_EN));
 	NVIC_ClearPendingIRQ(dma_irq);
 
-	des->_tx_wr_total_bytes += count;
-	while (count--) {
-		*des->_tx_wr_ptr = *buf++;
-		BSP_TTY_INC_PTR(des->_tx_wr_ptr, 1);
-	}
+	// Ensure that we sample the _txrb_out index before we start putting bytes into the ring buffer.
+	len = MIN(len, des->_txrb_size - des->_txrb_in + des->_txrb_out);
+	// first put the data starting from _txrb_in to buffer end
+	in = des->_txrb_in & (des->_txrb_size - 1);
+	l = MIN(len, des->_txrb_size - in);
+	memcpy(des->_txrb + in, buf, l);
+
+	// then put the rest (if any) at the beginning of the buffer
+	memcpy(des->_txrb, buf + l, len - l);
+
+	// Ensure that we add the bytes to the ring buffer before we update the _txrb_in index.
+	des->_txrb_in += len;
+
 	NVIC_EnableIRQ(dma_irq);
 	start_tx(&des->_hdma_uart_tx);
 
 	// Enable the DMA transfer for transmit request by setting the DMAT bit in the UART CR3 register
-	return count;
+	return len;
 }
 
 typedef struct {
@@ -452,11 +438,10 @@ typedef struct {
 
 static void start_tx(DMA_HandleTypeDef *hdma)
 {
-	uint32_t count;
+	uint32_t len, l, out;
 	struct bsp_tty_des *des =
 		CONTAINER_OF(CONTAINER_OF(&hdma->Init, DMA_HandleTypeDef, Init), struct bsp_tty_des, _hdma_uart_tx);
 	DMA_Stream_TypeDef *dma = (DMA_Stream_TypeDef *)des->dma_tx;
-	uint8_t *real_ptr;
 
 	// disable DMA
 	CLEAR_BIT(dma->CR, DMA_SxCR_EN);
@@ -468,29 +453,28 @@ static void start_tx(DMA_HandleTypeDef *hdma)
 	// We assumed that all the data will be sent. However, there is chance that not all
 	// the bytes are sent. So revert the read point to the next byte of the position
 	// that dma had just read from.
-	real_ptr = get_real_tx_rd_ptr(des);
+	des->_txrb_out -= dma->NDTR;
 
 	// we do nothing if read position equals to write position
-	if (des->_tx_wr_total_bytes == des->_tx_rd_total_bytes)
+	if (des->_txrb_in == des->_txrb_out)
 		return;
 
-	if (IS_ERR(real_ptr))
-		return;
-	des->_tx_rd_ptr = real_ptr;
-	count = des->_tx_rd_ptr < des->_tx_wr_ptr ? des->_tx_wr_ptr - des->_tx_rd_ptr :
-						    &_etty_int_sram_d1 - des->_tx_rd_ptr;
+	// first get the data from fifo->out until the end of the buffer */
+	len = des->_txrb_in - des->_txrb_out;
+	out = des->_txrb_out & (des->_txrb_size - 1);
+	l = MIN(len, des->_txrb_size - out);
 
 	// set dma parameters
-	dma->NDTR = count;
-	dma->M0AR = (uint32_t)des->_tx_rd_ptr; // only source address here. destination address is set when init
+	// only source address here. destination address is set when init
+	dma->NDTR = l;
+	dma->M0AR = (uint32_t)(des->_txrb + out);
 
 	// assuming that all the data will be sent
-	BSP_TTY_INC_PTR(des->_tx_rd_ptr, count);
-	des->_tx_rd_total_bytes += count;
+	des->_txrb_out += l;
 
-	// SCB_CleanDCache();
-	SCB_CleanDCache_by_Addr((uint32_t *)dma->M0AR, count);
-	SET_BIT(dma->CR, DMA_SxCR_EN); // start to send
+	// start to send
+	SCB_CleanDCache_by_Addr((uint32_t *)dma->M0AR, l);
+	SET_BIT(dma->CR, DMA_SxCR_EN);
 }
 
 static size_t read(struct bsp_tty_des *des, char *buf, size_t count)

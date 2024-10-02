@@ -9,6 +9,7 @@
 #include <zephyr/sys/util.h>
 #include <zephyr/sys/slist.h>
 #include <stm32h7xx.h>
+#include <zephyr/math/ilog2.h>
 
 #define SET_VAL_IF_ZERO(var, val)      \
 	do {                           \
@@ -53,6 +54,27 @@
 #define MAX_ERRNO	4095
 
 #define IS_ERR_VALUE(x) unlikely((x) >= (unsigned long)-MAX_ERRNO)
+
+/**
+ * @brief __roundup_pow_of_two() - round up to nearest power of two
+ * @param n value to round up
+ */
+static inline __attribute__((const)) uint32_t __roundup_pow_of_two(uint32_t n)
+{
+	return (uint32_t)1 << find_msb_set(n - 1);
+}
+
+/**
+ * @brief roundup_pow_of_two - round the given value up to nearest power of two
+ * 
+ * round the given value up to the nearest power of two.
+ * the result is undefined when n == 0;
+ * this can be used to initialise global variables from constant data.
+ * 
+ * @param n value to round up
+ */
+#define roundup_pow_of_two(n) \
+	(__builtin_constant_p(n) ? ((n == 1) ? 1 : (1UL << (ilog2((n) - 1) + 1))) : __roundup_pow_of_two(n))
 
 static inline void *__must_check ERR_PTR(long error)
 {

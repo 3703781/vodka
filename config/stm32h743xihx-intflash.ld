@@ -1,7 +1,6 @@
 ENTRY(Reset_Handler)
 HEAP_SIZE = 0x1000000; /* 8MB */
 GRAM_SIZE = 0x600000; /* 6MB */
-TTY_SIZE = 0x10000;  /* 64KB must be powers of 2*/
 _estack = ORIGIN(int_dtcm) + LENGTH(int_dtcm);
 _sext_sdram = ORIGIN(ext_sdram);
 _eext_sdram = _sext_sdram + LENGTH(ext_sdram);
@@ -128,15 +127,6 @@ SECTIONS
 
         PROVIDE_HIDDEN (_ebss_int_dtcm = .);
     } > int_dtcm
-
-    .tty.int_sram_d1 :
-    {
-        /* used for uart dma cache */
-        . = ALIGN(32);
-        PROVIDE_HIDDEN (_stty_int_sram_d1 = .);
-        . += TTY_SIZE;
-        PROVIDE_HIDDEN (_etty_int_sram_d1 = .);
-    } > int_sram_d1
 
     .bss.ext_sdram :
     {

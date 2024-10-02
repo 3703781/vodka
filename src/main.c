@@ -19,7 +19,6 @@ int main(void)
 		BSP_LOG_ERR("rand() = %d", rand());
 		BSP_LOG_CRT("rand() = %d", rand());
 		HAL_Delay(rand() % 100);
-		// fflush(0);
 	}
 
 	return 0;
