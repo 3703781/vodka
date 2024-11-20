@@ -8,6 +8,10 @@
 #include <sys/time.h>
 #include <sys/times.h>
 #include <bsp.h>
+#include <FreeRTOS.h>
+#include <task.h>
+
+#define MALLOCS_INSIDE_ISR
 
 static uint32_t fd_to_itm_instance[] = { 1, 1, 1 };
 
@@ -39,9 +43,7 @@ ssize_t _write(int fd, const void *buf, size_t count)
 	if (count == 0)
 		return 0;
 
-	for (size_t i = 0; i < count; i++) {
-		ITM_SendChar(((char *)buf)[i], fd_to_itm_instance[fd]);
-	}
+	for (size_t i = 0; i < count; i++) ITM_SendChar(((char *)buf)[i], fd_to_itm_instance[fd]);
 	if (mod == NULL)
 		mod = bsp_module_find("TTY1");
 
@@ -88,7 +90,11 @@ void *_sbrk(intptr_t incr)
 	extern char _sheap_ext_sdram, _eheap_ext_sdram;
 	char *heap_low = &_sheap_ext_sdram;
 	char *heap_high = &_eheap_ext_sdram;
-
+#if defined(MALLOCS_INSIDE_ISR)
+	UBaseType_t basepri = taskENTER_CRITICAL_FROM_ISR();
+#else
+	vTaskSuspendAll();
+#endif
 	static char *heap_current = NULL;
 
 	if (heap_current == NULL)
@@ -99,9 +105,19 @@ void *_sbrk(intptr_t incr)
 	if (heap_current + incr > heap_high) {
 		bsp_led_on(BSP_LED_YELLOW);
 		errno = ENOMEM;
+#if defined(MALLOCS_INSIDE_ISR)
+		taskEXIT_CRITICAL_FROM_ISR(basepri);
+#else
+		xTaskResumeAll();
+#endif
 		return (void *)-1;
 	}
 	heap_current += incr;
+#if defined(MALLOCS_INSIDE_ISR)
+	taskEXIT_CRITICAL_FROM_ISR(basepri);
+#else
+	xTaskResumeAll();
+#endif
 	return (caddr_t)heap_current_old;
 }
 
@@ -163,27 +179,38 @@ int _rename(const char *oldpath, const char *newpath)
 	return -1;
 }
 
+#if defined(MALLOCS_INSIDE_ISR)
+static UBaseType_t malloc_loc_baspri;
+#endif
 void __malloc_lock(struct _reent *p)
 {
 	(void)p;
-	// configASSERT(!xPortIsInsideInterrupt());
-	// vTaskSuspendAll();
+#if defined(MALLOCS_INSIDE_ISR)
+	malloc_loc_baspri = taskENTER_CRITICAL_FROM_ISR();
+#else
+	configASSERT(!xPortIsInsideInterrupt()); // Make damn sure no more mallocs inside ISRs!!
+	vTaskSuspendAll();
+#endif
 }
 
 void __malloc_unlock(struct _reent *p)
 {
 	(void)p;
-	// (void)xTaskResumeAll();
+#if defined(MALLOCS_INSIDE_ISR)
+	taskEXIT_CRITICAL_FROM_ISR(malloc_loc_baspri);
+#else
+	(void)xTaskResumeAll();
+#endif
 }
 
 void __env_lock(void)
 {
-	// vTaskSuspendAll();
+	vTaskSuspendAll();
 }
 
 void __env_unlock(void)
 {
-	// (void)xTaskResumeAll();
+	(void)xTaskResumeAll();
 }
 
 void _init(void)

@@ -2,7 +2,8 @@ this_file := $(lastword $(MAKEFILE_LIST))
 
 target := libhal.a
 
-objs := stm32h7xx_hal_cortex.o \
+objs := hal_timebase.o \
+stm32h7xx_hal_cortex.o \
 stm32h7xx_hal_rcc.o \
 stm32h7xx_hal_rcc_ex.o \
 stm32h7xx_hal_flash.o \
@@ -27,7 +28,9 @@ stm32h7xx_ll_fmc.o \
 stm32h7xx_hal_uart.o \
 stm32h7xx_hal_uart_ex.o \
 stm32h7xx_hal_usart.o \
-stm32h7xx_hal_usart_ex.o
+stm32h7xx_hal_usart_ex.o \
+stm32h7xx_hal_sd.o \
+stm32h7xx_ll_sdmmc.o
 
 
 confs :=

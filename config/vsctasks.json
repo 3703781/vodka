@@ -8,6 +8,7 @@
             "type": "process",
             "command": "make",
             "args": [
+                "-j",
                 "install"
             ],
             "dependsOn": "make",
@@ -26,6 +27,9 @@
             "label": "make",
             "type": "process",
             "command": "make",
+            "args": [
+                "-j"
+            ],
             "group": {
                 "kind": "build",
                 "isDefault": true

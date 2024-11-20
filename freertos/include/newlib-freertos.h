@@ -41,22 +41,22 @@
 
 #include <reent.h>
 
-#define configUSE_C_RUNTIME_TLS_SUPPORT    1
+#define configUSE_C_RUNTIME_TLS_SUPPORT 1
 
 #ifndef configTLS_BLOCK_TYPE
-    #define configTLS_BLOCK_TYPE           struct _reent
+#define configTLS_BLOCK_TYPE struct _reent
 #endif
 
 #ifndef configINIT_TLS_BLOCK
-    #define configINIT_TLS_BLOCK( xTLSBlock, pxTopOfStack )    _REENT_INIT_PTR( &( xTLSBlock ) )
+#define configINIT_TLS_BLOCK(xTLSBlock, pxTopOfStack) _REENT_INIT_PTR(&(xTLSBlock))
 #endif
 
 #ifndef configSET_TLS_BLOCK
-    #define configSET_TLS_BLOCK( xTLSBlock )    ( _impure_ptr = &( xTLSBlock ) )
+#define configSET_TLS_BLOCK(xTLSBlock) (_impure_ptr = &(xTLSBlock))
 #endif
 
 #ifndef configDEINIT_TLS_BLOCK
-    #define configDEINIT_TLS_BLOCK( xTLSBlock )    _reclaim_reent( &( xTLSBlock ) )
+#define configDEINIT_TLS_BLOCK(xTLSBlock) _reclaim_reent(&(xTLSBlock))
 #endif
 
 #endif /* INC_NEWLIB_FREERTOS_H */

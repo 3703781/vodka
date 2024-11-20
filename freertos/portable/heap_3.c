@@ -26,7 +26,6 @@
  *
  */
 
-
 /*
  * Implementation of pvPortMalloc() and vPortFree() that relies on the
  * compilers own malloc() and free() implementations.
@@ -50,47 +49,44 @@
 
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
-#if ( configSUPPORT_DYNAMIC_ALLOCATION == 0 )
-    #error This file must not be used if configSUPPORT_DYNAMIC_ALLOCATION is 0
+#if (configSUPPORT_DYNAMIC_ALLOCATION == 0)
+#error This file must not be used if configSUPPORT_DYNAMIC_ALLOCATION is 0
 #endif
 
 /*-----------------------------------------------------------*/
 
-void * pvPortMalloc( size_t xWantedSize )
+void *pvPortMalloc(size_t xWantedSize)
 {
-    void * pvReturn;
+	void *pvReturn;
 
-    vTaskSuspendAll();
-    {
-        pvReturn = malloc( xWantedSize );
-        traceMALLOC( pvReturn, xWantedSize );
-    }
-    ( void ) xTaskResumeAll();
+	vTaskSuspendAll();
+	{
+		pvReturn = malloc(xWantedSize);
+		traceMALLOC(pvReturn, xWantedSize);
+	}
+	(void)xTaskResumeAll();
 
-    #if ( configUSE_MALLOC_FAILED_HOOK == 1 )
-    {
-        if( pvReturn == NULL )
-        {
-            vApplicationMallocFailedHook();
-        }
-    }
-    #endif
+#if (configUSE_MALLOC_FAILED_HOOK == 1)
+	{
+		if (pvReturn == NULL)
+			vApplicationMallocFailedHook();
+	}
+#endif
 
-    return pvReturn;
+	return pvReturn;
 }
 /*-----------------------------------------------------------*/
 
-void vPortFree( void * pv )
+void vPortFree(void *pv)
 {
-    if( pv != NULL )
-    {
-        vTaskSuspendAll();
-        {
-            free( pv );
-            traceFREE( pv, 0 );
-        }
-        ( void ) xTaskResumeAll();
-    }
+	if (pv != NULL) {
+		vTaskSuspendAll();
+		{
+			free(pv);
+			traceFREE(pv, 0);
+		}
+		(void)xTaskResumeAll();
+	}
 }
 /*-----------------------------------------------------------*/
 
@@ -99,8 +95,8 @@ void vPortFree( void * pv )
  * This function must be called by the application before restarting the
  * scheduler.
  */
-void vPortHeapResetState( void )
+void vPortHeapResetState(void)
 {
-    /* No state needs to be re-initialised in heap_3. */
+	/* No state needs to be re-initialised in heap_3. */
 }
 /*-----------------------------------------------------------*/

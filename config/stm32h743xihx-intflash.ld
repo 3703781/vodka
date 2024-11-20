@@ -4,6 +4,7 @@ GRAM_SIZE = 0x600000; /* 6MB */
 _estack = ORIGIN(int_dtcm) + LENGTH(int_dtcm);
 _sext_sdram = ORIGIN(ext_sdram);
 _eext_sdram = _sext_sdram + LENGTH(ext_sdram);
+_sint_sram_d1 = ORIGIN(int_sram_d1);
 MEMORY
 {
     int_itcm (rwx)          : ORIGIN = 0x00000000, LENGTH = 64K
@@ -78,7 +79,7 @@ SECTIONS
         /* data & tls data before ext_sdram initialization */
         . = ALIGN(4);
         *libcmsis.a:(.data .data* .tdata .tdata*)
-        *libhal.a:stm32h7xx_hal.o(.data .data* .tdata .tdata*)
+        *libhal.a:(.data .data* .tdata .tdata*)
         *libbsp.a:bsp.o(.data .data* .tdata .tdata*)
         *libbsp.a:bsp_utils.o(.data .data* .tdata .tdata*)
         *libbsp.a:bsp_debug.o(.data .data* .tdata .tdata*)
@@ -115,7 +116,7 @@ SECTIONS
         PROVIDE_HIDDEN (_sbss_int_dtcm = .);
 
         *libcmsis.a:(.bss .bss* COMMON .tbss)
-        *libhal.a:stm32h7xx_hal.o(.bss .bss* COMMON .tbss)
+        *libhal.a:(.bss .bss* COMMON .tbss)
         *libbsp.a:bsp.o(.bss .bss* COMMON .tbss)
         *libbsp.a:bsp_utils.o(.bss .bss* COMMON .tbss)
         *libbsp.a:bsp_debug.o(.bss .bss* COMMON .tbss)

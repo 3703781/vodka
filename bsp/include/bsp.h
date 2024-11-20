@@ -10,6 +10,7 @@
 #include <bsp_lcd.h>
 #include <bsp_tty.h>
 #include <bsp_log.h>
+#include <bsp_disk.h>
 
 void bsp_init(void);
 

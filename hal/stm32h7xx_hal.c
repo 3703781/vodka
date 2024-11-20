@@ -264,34 +264,35 @@ __weak void HAL_MspDeInit(void)
   * @param TickPriority: Tick interrupt priority.
   * @retval HAL status
   */
-__weak HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
-{
-  /* Check uwTickFreq for MisraC 2012 (even if uwTickFreq is a enum type that don't take the value zero)*/
-  if((uint32_t)uwTickFreq == 0UL)
-  {
-    return HAL_ERROR;
-  }
+// weak function not work properly when linking with static libraries
+// __weak HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
+// {
+//   /* Check uwTickFreq for MisraC 2012 (even if uwTickFreq is a enum type that don't take the value zero)*/
+//   if((uint32_t)uwTickFreq == 0UL)
+//   {
+//     return HAL_ERROR;
+//   }
 
-    /* Configure the SysTick to have interrupt in 1ms time basis*/
-    if (HAL_SYSTICK_Config(SystemCoreClock / (1000UL / (uint32_t)uwTickFreq)) > 0U)
-    {
-      return HAL_ERROR;
-    }
+//     /* Configure the SysTick to have interrupt in 1ms time basis*/
+//     if (HAL_SYSTICK_Config(SystemCoreClock / (1000UL / (uint32_t)uwTickFreq)) > 0U)
+//     {
+//       return HAL_ERROR;
+//     }
 
-  /* Configure the SysTick IRQ priority */
-  if (TickPriority < (1UL << __NVIC_PRIO_BITS))
-  {
-    HAL_NVIC_SetPriority(SysTick_IRQn, TickPriority, 0U);
-    uwTickPrio = TickPriority;
-  }
-  else
-  {
-    return HAL_ERROR;
-  }
+//   /* Configure the SysTick IRQ priority */
+//   if (TickPriority < (1UL << __NVIC_PRIO_BITS))
+//   {
+//     HAL_NVIC_SetPriority(SysTick_IRQn, TickPriority, 0U);
+//     uwTickPrio = TickPriority;
+//   }
+//   else
+//   {
+//     return HAL_ERROR;
+//   }
 
-  /* Return function status */
-  return HAL_OK;
-}
+//   /* Return function status */
+//   return HAL_OK;
+// }
 
 /**
   * @}
@@ -432,11 +433,12 @@ __weak void HAL_Delay(uint32_t Delay)
   *       implementations in user file.
   * @retval None
   */
-__weak void HAL_SuspendTick(void)
-{
-  /* Disable SysTick Interrupt */
-  SysTick->CTRL &= ~SysTick_CTRL_TICKINT_Msk;
-}
+// weak function not work properly when linking with static libraries
+// __weak void HAL_SuspendTick(void)
+// {
+//   /* Disable SysTick Interrupt */
+//   SysTick->CTRL &= ~SysTick_CTRL_TICKINT_Msk;
+// }
 
 /**
   * @brief Resume Tick increment.
@@ -448,11 +450,12 @@ __weak void HAL_SuspendTick(void)
   *       implementations in user file.
   * @retval None
   */
-__weak void HAL_ResumeTick(void)
-{
-  /* Enable SysTick Interrupt */
-  SysTick->CTRL  |= SysTick_CTRL_TICKINT_Msk;
-}
+// weak function not work properly when linking with static libraries
+// __weak void HAL_ResumeTick(void)
+// {
+//   /* Enable SysTick Interrupt */
+//   SysTick->CTRL  |= SysTick_CTRL_TICKINT_Msk;
+// }
 
 /**
   * @brief  Returns the HAL revision

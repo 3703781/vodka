@@ -41,7 +41,7 @@ ARCHS := -mcpu=cortex-m7 \
 -mfpu=fpv5-d16
 
 DEBUGS := -g -ggdb3
-OPTIMS := -O3
+OPTIMS := -Og
 FUNCS := \
 -fmacro-prefix-map=./= \
 -fno-common \

@@ -9,6 +9,8 @@ EXTRA_CFLAGS_DOWN += \
 -DCONFIG_ARM \
 -I$(ABSPROJDIR)bsp/include \
 -I$(ABSPROJDIR)src/include \
+-I$(ABSPROJDIR)freertos/include \
+-I$(ABSPROJDIR)freertos/portable \
 -I$(ABSPROJDIR)include
 
 include $(obj_mk)

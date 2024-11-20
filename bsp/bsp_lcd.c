@@ -363,18 +363,18 @@ void bsp_lcd_cpybuf(struct bsp_lcd_des *des, uint16_t x, uint16_t y, uint16_t wi
 
 void HAL_LTDC_LineEventCallback(LTDC_HandleTypeDef *hltdc)
 {
-	struct bsp_lcd_des *des = CONTAINER_OF(hltdc, struct bsp_lcd_des, _hltdc);
-	des->bklt_ops.set_brightness(60);
+	// struct bsp_lcd_des *des = CONTAINER_OF(hltdc, struct bsp_lcd_des, _hltdc);
+	// des->bklt_ops.set_brightness(60);
 
-	uint32_t color = (uint32_t)rand();
-	uint8_t *tmp = des->layer_gram_addr[0];
+	// uint32_t color = (uint32_t)rand();
+	// uint8_t *tmp = des->layer_gram_addr[0];
 
-	for (size_t i = 0; i < des->dev.width * des->dev.height; i++) {
-		*(uint32_t *)tmp = color;
-		tmp += 3;
-	}
-	__DSB();
-	SCB_CleanInvalidateDCache();
-	HAL_LTDC_ProgramLineEvent(&des->_hltdc, des->_hltdc.Init.AccumulatedActiveH + 1);
+	// for (size_t i = 0; i < des->dev.width * des->dev.height; i++) {
+	// 	*(uint32_t *)tmp = color;
+	// 	tmp += 3;
+	// }
+	// __DSB();
+	// SCB_CleanInvalidateDCache();
+	// HAL_LTDC_ProgramLineEvent(&des->_hltdc, des->_hltdc.Init.AccumulatedActiveH + 1);
 	__HAL_LTDC_CLEAR_FLAG(hltdc, LTDC_FLAG_LI);
 }

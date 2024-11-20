@@ -91,7 +91,10 @@ IndentWidth: 8
 IndentWrappedFunctionNames: false
 JavaScriptQuotes: Leave
 JavaScriptWrapImports: true
-KeepEmptyLinesAtTheStartOfBlocks: false
+KeepEmptyLines:
+  AtEndOfFile: false
+  AtStartOfBlock: false
+  AtStartOfFile: false
 Language: Cpp
 LineEnding: LF
 MacroBlockBegin: ''
@@ -111,9 +114,12 @@ PenaltyBreakFirstLessLess: 0
 PenaltyBreakString: 10
 PenaltyExcessCharacter: 100
 PenaltyReturnTypeOnItsOwnLine: 60
-
 PointerAlignment: Right
-ReflowComments: false
+QualifierAlignment: Left
+ReflowComments: true
+RemoveBracesLLVM: true
+RemoveEmptyLinesInUnwrappedLines: true
+RemoveParentheses: ReturnStatement
 SortIncludes: false
 SortUsingDeclarations: false
 SpaceAfterCStyleCast: false
@@ -130,7 +136,7 @@ SpacesInContainerLiterals: false
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
-Standard: Cpp03
+Standard: Latest
 TabWidth: 8
 UseTab: Always
 

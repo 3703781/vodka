@@ -5,45 +5,45 @@
 	struct bsp_module *__log_mod = bsp_module_find("LOG");                       \
 	struct bsp_log_des *__log_des = (struct bsp_log_des *)__log_mod->descriptor; \
 	__log_des->owner = BSP_MODULE_THIS;
-#define BSP_LOG_TRC(fmt, ...)                                                \
-	__log_des->_level = BSP_LOG_LVL_TRACE;                               \
-	__log_des->_prefix_func = (char *)__func__;                          \
+#define BSP_LOG_TRC(fmt, ...)                                            \
+	__log_des->_level = BSP_LOG_LVL_TRACE;                           \
+	__log_des->_prefix_func = (char *)__func__;                      \
 	__log_des->_prefix_file_line = __FILE__ ":" STRINGIFY(__LINE__); \
 	bsp_log(__log_des, fmt "\r\n", ##__VA_ARGS__)
 
-#define BSP_LOG_DBG(fmt, ...)                                                \
-	__log_des->_level = BSP_LOG_LVL_DEBUG;                               \
-	__log_des->_prefix_func = (char *)__func__;                          \
+#define BSP_LOG_DBG(fmt, ...)                                            \
+	__log_des->_level = BSP_LOG_LVL_DEBUG;                           \
+	__log_des->_prefix_func = (char *)__func__;                      \
 	__log_des->_prefix_file_line = __FILE__ ":" STRINGIFY(__LINE__); \
 	bsp_log(__log_des, fmt "\r\n", ##__VA_ARGS__)
 
-#define BSP_LOG_INF(fmt, ...)                                                \
-	__log_des->_level = BSP_LOG_LVL_INFO;                                \
-	__log_des->_prefix_func = (char *)__func__;                          \
+#define BSP_LOG_INF(fmt, ...)                                            \
+	__log_des->_level = BSP_LOG_LVL_INFO;                            \
+	__log_des->_prefix_func = (char *)__func__;                      \
 	__log_des->_prefix_file_line = __FILE__ ":" STRINGIFY(__LINE__); \
 	bsp_log(__log_des, fmt "\r\n", ##__VA_ARGS__)
 
-#define BSP_LOG_WRN(fmt, ...)                                                \
-	__log_des->_level = BSP_LOG_LVL_WARNING;                             \
-	__log_des->_prefix_func = (char *)__func__;                          \
+#define BSP_LOG_WRN(fmt, ...)                                            \
+	__log_des->_level = BSP_LOG_LVL_WARNING;                         \
+	__log_des->_prefix_func = (char *)__func__;                      \
 	__log_des->_prefix_file_line = __FILE__ ":" STRINGIFY(__LINE__); \
 	bsp_log(__log_des, fmt "\r\n", ##__VA_ARGS__)
 
-#define BSP_LOG_ERR(fmt, ...)                                                \
-	__log_des->_level = BSP_LOG_LVL_ERROR;                               \
-	__log_des->_prefix_func = (char *)__func__;                          \
+#define BSP_LOG_ERR(fmt, ...)                                            \
+	__log_des->_level = BSP_LOG_LVL_ERROR;                           \
+	__log_des->_prefix_func = (char *)__func__;                      \
 	__log_des->_prefix_file_line = __FILE__ ":" STRINGIFY(__LINE__); \
 	bsp_log(__log_des, fmt "\r\n", ##__VA_ARGS__)
 
-#define BSP_LOG_CRT(fmt, ...)                                                \
-	__log_des->_level = BSP_LOG_LVL_CRITICAL;                            \
-	__log_des->_prefix_func = (char *)__func__;                          \
+#define BSP_LOG_CRT(fmt, ...)                                            \
+	__log_des->_level = BSP_LOG_LVL_CRITICAL;                        \
+	__log_des->_prefix_func = (char *)__func__;                      \
 	__log_des->_prefix_file_line = __FILE__ ":" STRINGIFY(__LINE__); \
 	bsp_log(__log_des, fmt "\r\n", ##__VA_ARGS__)
 
-#define BSP_LOG_ALW(fmt, ...)                                                \
-	__log_des->_level = BSP_LOG_LVL_ALWAYS;                              \
-	__log_des->_prefix_func = (char *)__func__;                          \
+#define BSP_LOG_ALW(fmt, ...)                                            \
+	__log_des->_level = BSP_LOG_LVL_ALWAYS;                          \
+	__log_des->_prefix_func = (char *)__func__;                      \
 	__log_des->_prefix_file_line = __FILE__ ":" STRINGIFY(__LINE__); \
 	bsp_log(__log_des, fmt "\r\n", ##__VA_ARGS__)
 
@@ -70,7 +70,7 @@ struct bsp_log_subs {
 
 /**
  * @brief Structure representing the log descriptor
- * 
+ *
  * This structure contains various parameters and configurations related to the logging function.
  */
 struct bsp_log_des {
@@ -83,12 +83,16 @@ struct bsp_log_des {
 	char *_msg; //!< the current log message
 	char *_prefix_file_line;
 	char *_prefix_func;
-	char *_prefix_cl; //!< to store the prefix of the current log message in the form of "\e[32m[0.000775]\e[0m \e[33mmodule\e[0m \e[33mWARNING\e[0m: "
+	char *_prefix_cl; //!< to store the prefix of the current log message in the form of "\e[32m[0.000775]\e[0m
+			  //!< \e[33mmodule\e[0m \e[33mWARNING\e[0m: "
 	char *_prefix_bw; //!< to store a prefix of the current log message in the form of "[0.000775] module WARNING: "
 
-	int _msg_strlen; //!< length of the log currently stored in _msg, excluding the null byte used to end output to strings
-	int _prefix_cl_strlen; //!< length of the prefix currently stored in _prefix_cl, excluding the null byte used to end output to strings
-	int _prefix_bw_strlen; //!< length of the prefix currently stored in _prefix_bw, excluding the null byte used to end output to strings
+	int _msg_strlen; //!< length of the log currently stored in _msg, excluding the null byte used to end output to
+			 //!< strings
+	int _prefix_cl_strlen; //!< length of the prefix currently stored in _prefix_cl, excluding the null byte used to
+			       //!< end output to strings
+	int _prefix_bw_strlen; //!< length of the prefix currently stored in _prefix_bw, excluding the null byte used to
+			       //!< end output to strings
 
 	enum bsp_log_lvl _level; //!< error level of the current log
 	const char *_level_name; //!< name of error level of the current log
@@ -104,12 +108,12 @@ struct bsp_log_des {
  *
  * bit        7    6    5    4    3    2    1    0
  * _flag      -    -    -    -    -    -    BW   CL
- * 
+ *
  * BW and CL stand for black & white and color respectively. If there is any
  * subscriber that support color output, bit CL is set to indicate that _prefix_cl
  * is used to store the colorful prefix. Similarly, bit BW indicats that _prefix_bw
  * is to store a plain prefix
- * 
+ *
  * @{
  */
 

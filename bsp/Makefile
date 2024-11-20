@@ -10,6 +10,6 @@ EXTRA_CFLAGS_SELF :=
 EXTRA_CFLAGS_DOWN += \
 -DCONFIG_ARM \
 -I$(ABSPROJDIR)bsp/include \
--I$(ABSPROJDIR)include \
+-I$(ABSPROJDIR)include
 
 include $(target_mk)

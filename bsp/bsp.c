@@ -14,18 +14,14 @@ static void bsp_earlyinit_clk(void)
 	/* Configure the main internal regulator output voltage */
 	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-	while (!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {
-	}
+	while (!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY));
 
 	__HAL_RCC_SYSCFG_CLK_ENABLE();
 	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
 
-	while (!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {
-	}
+	while (!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY));
 
-	/* Initializes the RCC Oscillators according to the specified parameters
-	 * in the RCC_OscInitTypeDef structure.
-	 */
+	/* Initializes the RCC Oscillators according to the specified parameters in the RCC_OscInitTypeDef structure. */
 	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
 	RCC_OscInitStruct.HSEState = RCC_HSE_ON;
 	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
@@ -52,10 +48,18 @@ static void bsp_earlyinit_clk(void)
 
 	assert(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) == HAL_OK);
 
-	/* 
-	ltdc - 17.6Mhz, 29.98fps, 52.8MB/s
-	sdram - 120MHz
-	*/
+	PeriphClkInitStruct.PLL2.PLL2M = 5;
+	PeriphClkInitStruct.PLL2.PLL2N = 80;
+	PeriphClkInitStruct.PLL2.PLL2P = 2;
+	PeriphClkInitStruct.PLL2.PLL2Q = 2;
+	PeriphClkInitStruct.PLL2.PLL2R = 2;
+	PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_2;
+	PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+	PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+
+	// LTDC - 17.6Mhz, 29.98fps, 52.8MB/s
+	// SDRAM - 120MHz
+	// SDMMC1 - 200MHz
 	PeriphClkInitStruct.PLL3.PLL3M = 5;
 	PeriphClkInitStruct.PLL3.PLL3N = 88;
 	PeriphClkInitStruct.PLL3.PLL3P = 2;
@@ -65,7 +69,8 @@ static void bsp_earlyinit_clk(void)
 	PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOMEDIUM;
 	PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
 
-	PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_LTDC | RCC_PERIPHCLK_FMC;
+	PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_LTDC | RCC_PERIPHCLK_FMC | RCC_PERIPHCLK_SDMMC;
+	PeriphClkInitStruct.SdmmcClockSelection = RCC_SDMMCCLKSOURCE_PLL2;
 	PeriphClkInitStruct.FmcClockSelection = RCC_FMCCLKSOURCE_D1HCLK;
 	assert(HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) == HAL_OK);
 }
@@ -86,7 +91,7 @@ static void bsp_earlyinit_mpu(void)
 	MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL1;
 	MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
 	MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
-	MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+	MPU_InitStruct.IsShareable = MPU_ACCESS_SHAREABLE;
 	MPU_InitStruct.IsCacheable = MPU_ACCESS_CACHEABLE;
 	MPU_InitStruct.IsBufferable = MPU_ACCESS_BUFFERABLE;
 
@@ -114,12 +119,10 @@ static void bsp_earlyinit_crt0(void)
 	volatile char *src = &_sidata_ext_sdram;
 	volatile char *dst = &_sdata_ext_sdram;
 
-	while (dst < &_edata_ext_sdram)
-		*dst++ = *src++;
+	while (dst < &_edata_ext_sdram) *dst++ = *src++;
 
 	dst = &_sbss_ext_sdram;
-	while (dst < &_ebss_ext_sdram)
-		*dst++ = 0;
+	while (dst < &_ebss_ext_sdram) *dst++ = 0;
 
 	SCB_CleanDCache();
 	SCB_InvalidateDCache();
@@ -164,6 +167,7 @@ void bsp_init(void)
 	bsp_module_append(&bsp_tty_mod);
 	bsp_module_append(&bsp_log_mod);
 	bsp_module_append(&bsp_lcd_mod);
+	bsp_module_append(&bsp_disk_mod);
 
 	bsp_module_prepare_all();
 	bsp_module_setup_all();
