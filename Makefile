@@ -17,7 +17,7 @@ MAKEFLAGS += --no-builtin-rules --no-print-directory -s
 .SUFFIXES:
 
 target := m7proj-h7
-dirs := src/ bsp/ cmsis/ hal/ freertos/
+dirs := src/ bsp/ cmsis/ hal/ freertos/ net/
 
 this_file := $(abspath $(lastword $(MAKEFILE_LIST)))
 this_dir := $(dir $(this_file))
