@@ -1,5 +1,5 @@
 export hostobj_mk hostconfig_mk hosttarget_mk helper_mk obj_mk config_mk target_mk
-export abs_s32gimage abs_genconfig abs_idlc
+export abs_mkimage abs_genconfig
 export EXTRA_CFLAGS_DOWN ABSPROJDIR
 config_down_variable_names := $(filter CONFIG_DOWN_%, $(.VARIABLES))
 config_self_variable_names := $(filter CONFIG_SELF_%, $(.VARIABLES))
