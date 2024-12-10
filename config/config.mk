@@ -18,7 +18,7 @@ CC := $(PREFIX)gcc
 LD := $(PREFIX)ld
 CXX := $(PREFIX)g++
 AS := $(PREFIX)gcc -x assembler-with-cpp
-AR := $(PREFIX)ar
+AR := $(PREFIX)gcc-ar
 OBJCOPY := $(PREFIX)objcopy
 SIZE := $(PREFIX)size
 PR := $(CC) -E
@@ -32,7 +32,9 @@ MACROS := \
 
 INCS := \
 -I$(ABSPROJDIR)cmsis/include \
--I$(ABSPROJDIR)hal/include
+-I$(ABSPROJDIR)hal/include \
+-I$(ABSPROJDIR)net/portable/include \
+-I$(ABSPROJDIR)net/include
 
 ARCHS := -mcpu=cortex-m7 \
 -mthumb \
@@ -49,7 +51,8 @@ FUNCS := \
 -fno-dwarf2-cfi-asm \
 -fno-allow-store-data-races \
 -ftrivial-auto-var-init=zero \
--fno-stack-clash-protection
+-fno-stack-clash-protection \
+-flto=auto
 # -fstrict-flex-arrays=3
 
 WARNS := \

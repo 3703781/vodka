@@ -111,17 +111,17 @@ $(tmp_make): $(abs_objs) $(abs_conf_tos) $(abs_idl_tos) $(abs_dir_tmp_makes)
 
 %.o: %.c
 	echo "CC          $@"; \
-	cmd="$(CC) -fPIC $(EXTRA_CFLAGS) $(CFLAGS) $< -o $@"; \
+	cmd="$(CC) $(EXTRA_CFLAGS) $(CFLAGS) $< -o $@"; \
 	eval $$cmd || ( echo $$cmd; exit 1 )
 
 %.o: %.s
 	echo "CC          $@"; \
-	cmd="$(AS) -fPIC $(EXTRA_CFLAGS) $(PRFLAGS) $(ASFLAGS) $< -o $@"; \
+	cmd="$(AS) $(EXTRA_CFLAGS) $(PRFLAGS) $(ASFLAGS) $< -o $@"; \
 	eval $$cmd || ( echo $$cmd; exit 1 )
 
 %.d: %.c $(abs_conf_tos) $(abs_idl_tos) $(abs_dir_tmp_makes)
 	echo "DEP         $@"; \
-	cmd='$(CC) -fPIC $(EXTRA_CFLAGS) $(CFLAGS) -MM $<'; res=$$($$cmd); exit_status=$$?; \
+	cmd='$(CC) $(EXTRA_CFLAGS) $(CFLAGS) -MM $<'; res=$$($$cmd); exit_status=$$?; \
 	if [ $$exit_status -eq 0 ]; then \
 	  if [ -z "$$res" ]; then \
 	    echo "$@: " > $@; \
