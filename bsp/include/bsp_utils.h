@@ -66,15 +66,14 @@ static inline __attribute__((const)) uint32_t __roundup_pow_of_two(uint32_t n)
 
 /**
  * @brief roundup_pow_of_two - round the given value up to nearest power of two
- * 
+ *
  * round the given value up to the nearest power of two.
  * the result is undefined when n == 0;
  * this can be used to initialise global variables from constant data.
- * 
+ *
  * @param n value to round up
  */
-#define roundup_pow_of_two(n) \
-	(__builtin_constant_p(n) ? ((n == 1) ? 1 : (1UL << (ilog2((n) - 1) + 1))) : __roundup_pow_of_two(n))
+#define roundup_pow_of_two(n) (__builtin_constant_p(n) ? ((n == 1) ? 1 : (1UL << (ilog2((n) - 1) + 1))) : __roundup_pow_of_two(n))
 
 static inline void *__must_check ERR_PTR(long error)
 {
@@ -106,8 +105,13 @@ struct bsp_utils_bus_des {
 struct bsp_utils_periph_des {
 	uint32_t addr_lo;
 	const uint32_t addr_hi;
-	const char *name;
+	const char *const name;
 	const struct bsp_utils_bus_des *const bus_des;
+	struct {
+		const char *const name;
+		const IRQn_Type irqn;
+		void (*fun)(void *h);
+	} irqs[8];
 };
 
 struct bsp_utils_periph_des *bsp_utils_get_periph(struct bsp_utils_periph_des *des);

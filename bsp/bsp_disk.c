@@ -18,10 +18,13 @@ static size_t write(struct bsp_disk_des *des, const char *buf, uint32_t blk_addr
 	HAL_StatusTypeDef res;
 	if (BSP_MODULE_THIS->state != BSP_MODULE_STATE_LIVE)
 		return 0;
-	res = HAL_SD_GetCardState(&des->_hsd);
-	if (res != HAL_SD_CARD_STANDBY)
+	// res = HAL_SD_GetCardState(&des->_hsd);
+	// if (res != HAL_SD_CARD_STANDBY)
+	// 	return 0;
+	res = HAL_SD_Erase(&des->_hsd, blk_addr, blk_addr + 512);
+	if (res != HAL_OK)
 		return 0;
-	res = HAL_SD_ReadBlocks(&des->_hsd, (uint8_t *)buf, blk_addr, blk_count, des->ops.read_timeout);
+	res = HAL_SD_WriteBlocks(&des->_hsd, (uint8_t *)buf, blk_addr, blk_count, des->ops.read_timeout);
 	if (res != HAL_OK)
 		return 0;
 	return blk_count;
@@ -32,10 +35,10 @@ static size_t read(struct bsp_disk_des *des, const char *buf, uint32_t blk_addr,
 	HAL_StatusTypeDef res;
 	if (BSP_MODULE_THIS->state != BSP_MODULE_STATE_LIVE)
 		return 0;
-	res = HAL_SD_GetCardState(&des->_hsd);
-	if (res != HAL_SD_CARD_STANDBY)
-		return 0;
-	res = HAL_SD_WriteBlocks(&des->_hsd, (uint8_t *)buf, blk_addr, blk_count, des->ops.write_timeout);
+	// res = HAL_SD_GetCardState(&des->_hsd);
+	// if (res != HAL_SD_CARD_STANDBY)
+	// 	return 0;
+	res = HAL_SD_ReadBlocks(&des->_hsd, (uint8_t *)buf, blk_addr, blk_count, des->ops.write_timeout);
 	if (res != HAL_OK)
 		return 0;
 	return blk_count;
@@ -107,6 +110,9 @@ static int init_mmc(struct bsp_disk_des *des)
 	struct bsp_utils_periph_des periph_des = { 0 };
 
 	// sdmmc clocksource is initialized in bsp_earlyinit_clk()
+
+	HAL_NVIC_SetPriority(SDMMC1_IRQn, 14, 0);
+	HAL_NVIC_EnableIRQ(SDMMC1_IRQn);
 
 	periph_des.addr_lo = (uint32_t)des->sdmmc;
 	if (bsp_utils_periph_clk(&periph_des, ENABLE))

@@ -53,14 +53,14 @@ void log_task2(void *arg)
 	BSP_LOG_DECLARE();
 
 	UNUSED(arg);
-	uint8_t *buf = malloc(512);
+	uint8_t *buf = malloc(1024);
 	uint8_t buf2[512] = { 0 };
 
 	while (1) {
 		strcpy(buf, "qwertyuiopaSDFGHJKL");
-		disk_des->ops.write(disk_des, buf, 0, 1);
-		disk_des->ops.read(disk_des, buf2, 0, 1);
-		BSP_LOG_WRN("%s\r\n", buf2);
+		disk_des->ops.write(disk_des, buf, 0, 2);
+		disk_des->ops.read(disk_des, buf2, 0, 2);
+		BSP_LOG_WRN("%sq", buf2);
 		xTaskDelayUntil(&last_time, pdMS_TO_TICKS(1000));
 	}
 }
